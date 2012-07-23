@@ -1,0 +1,17 @@
+Prototype for new logging infrastructure.
+
+on log/run file:
+
+  exec svlogd /srv/barn/logs/<SERVICE_NAME>
+
+  where log/config file contains rotation/retention [1] policy.
+
+/srv/barn/logs/FQDN/
+               |_ nginx
+               |_ soundcloud_worker
+               |- soundcloud_app
+               |_ haproxy
+
+An inotify callback waits on /srv/barn/logs recursively (which is equal to
+listening on all subdirs). On callback it calls rsync on /srv/barn/logs/.
+
