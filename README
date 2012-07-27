@@ -1,17 +1,22 @@
 Prototype for new logging infrastructure.
 
-on log/run file:
+On master:
 
-  exec svlogd /srv/barn/logs/<SERVICE_NAME>
+  Run server/master.sh    # runs on 1025
+  Run server/replicate.sh localhost 1026   # replicates to localhost 1026
 
-  where log/config file contains rotation/retention [1] policy.
+On slave:
 
-/srv/barn/logs/FQDN/
-               |_ nginx
-               |_ soundcloud_worker
-               |- soundcloud_app
-               |_ haproxy
+  Run server/slave.sh   #runs on localhost 1026
 
-An inotify callback waits on /srv/barn/logs recursively (which is equal to
-listening on all subdirs). On callback it calls rsync on /srv/barn/logs/.
+On producer:
 
+  Run ./sync.sh that reads barn.conf and rsyncs to the host it points to
+  Run ./sayshit.sh | ./svlogd.sh to produce random log entries
+
+
+
+Run ./cleanup.sh to cleanup produced logs.
+
+
+./server/hdfs-writer is a work-in-progress to write to HDFS.
