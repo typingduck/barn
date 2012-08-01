@@ -1,93 +1,89 @@
 import java.io.File
-import org.joda.time._
-import java.math.BigInteger
+import org.apache.hadoop.util.GenericOptionsParser
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.io.{BytesWritable => BW, LongWritable => LW, SequenceFile}
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.io.SequenceFile
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import org.apache.commons.io.IOUtils
+import java.text.SimpleDateFormat
+import java.util.Date
 
-object Tai64 {
+object LogFiles {
+  import org.joda.time.DateTime
 
-  val conversion_table = List[(DateTime, Int)](
-                      (new DateTime(1972, 01,  1, 0 , 0), 10),
-                      (new DateTime(1972, 07,  1, 0 , 0), 11),
-                      (new DateTime(1973, 01,  1, 0 , 0), 12),
-                      (new DateTime(1974, 01,  1, 0 , 0), 13),
-                      (new DateTime(1975, 01,  1, 0 , 0), 14),
-                      (new DateTime(1976, 01,  1, 0 , 0), 15),
-                      (new DateTime(1977, 01,  1, 0 , 0), 16),
-                      (new DateTime(1978, 01,  1, 0 , 0), 17),
-                      (new DateTime(1979, 01,  1, 0 , 0), 18),
-                      (new DateTime(1980, 01,  1, 0 , 0), 19),
-                      (new DateTime(1981, 07,  1, 0 , 0), 20),
-                      (new DateTime(1982, 07,  1, 0 , 0), 21),
-                      (new DateTime(1983, 07,  1, 0 , 0), 22),
-                      (new DateTime(1985, 07,  1, 0 , 0), 23),
-                      (new DateTime(1988, 01,  1, 0 , 0), 24),
-                      (new DateTime(1990, 01,  1, 0 , 0), 25),
-                      (new DateTime(1991, 01,  1, 0 , 0), 26),
-                      (new DateTime(1992, 07,  1, 0 , 0), 27),
-                      (new DateTime(1993, 07,  1, 0 , 0), 28),
-                      (new DateTime(1994, 07,  1, 0 , 0), 29),
-                      (new DateTime(1996, 01,  1, 0 , 0), 30),
-                      (new DateTime(1997, 07,  1, 0 , 0), 31),
-                      (new DateTime(1999, 01,  1, 0 , 0), 32),
-                      (new DateTime(2006, 01,  1, 0 , 0), 33),
-                      (new DateTime(2009, 01,  1, 0 , 0), 34),
-                      (new DateTime(2012, 07,  1, 0 , 0), 35))
+  def getLatest(times: List[DateTime]) : DateTime = {
+    implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
+    times.sorted.head
+  }
 
-  def convertTai64ToTime(hex : String) : DateTime = {
-    val tai_int = java.lang.Long.parseLong(hex.substring(0,16), 16)
-    val nano_int = java.lang.Long.parseLong(hex.substring(16, 24), 16)
-    val seconds = tai_int - 4611686018427387904L
-    System.out.println("nano_int" + nano_int)
-    System.out.println("secs:" + seconds)
+  def tai2Human(name: String) : DateTime
+  = Tai64.convertTai64ToTime(name)
 
-    val basedate = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-    val timedelta = new Duration(seconds * 1000 + nano_int / 1000000)
-    System.out.println("seconds: " + seconds + " nano_int " + nano_int + " nano_int/1000000 " + nano_int / 1000000)
+  def svLogdName2tai(name: String) : String
+  = name.substring(1, name.size - 2)
+}
 
-    System.out.println("delta:" + timedelta)
+object FileCombiner {
 
-    val final_ = basedate.plus(timedelta)
+  def combineFiles(localFiles: List[File], outputFile: File) = {
+    val inputStreams = localFiles.map(x => new FileInputStream(x))
+    val outputStream = new FileOutputStream(outputFile)
 
-    val extraSeconds : Int = conversion_table.reverse.find(_._1.isBefore(final_)).map(_._2).getOrElse(0)
+    inputStreams.foreach(is => IOUtils.copy(is, outputStream))
 
-    final_.plusSeconds(extraSeconds * -1)
+    inputStreams.foreach (_.close)
+    outputStream.close
   }
 
 }
-
-
-object SeriesCheck {
-
-  def timeSeriesRegular(ts : List[DateTime]) : Boolean = {
-    System.out.println(ts)
-    false
-  }
-}
-
 
 object BarnHdfsWriter extends App {
-/*
-  val logPath = args(0)
-  val exclude = List(".gitignore", "target")
 
-  val files = new File(logPath).listFiles.toList.map(_.getName).diff(exclude)
+  import LogFiles._
 
-  val unexpectedFiles = files.filterNot(_.endsWith(".s"))
+  //Parse hadoop params and leave off extra ones
+  val hadoopOptionParser = new GenericOptionsParser(new Configuration, args)
+  val hadoopConf = hadoopOptionParser.getConfiguration()
+  val remainingArgs = hadoopOptionParser.getRemainingArgs()
+  val fs = FileSystem.get(hadoopConf)
 
-  System.out.println("We have " + unexpectedFiles.size + " unexpected files:" + unexpectedFiles )
-*/
-  System.out.println("hello you " + Tai64.convertTai64ToTime("4000000050116573099c6554"))
+  val logPath = remainingArgs(0)
+  val exclude = List(".gitignore", "target", "lock", "current")  //Dev, remove me
 
-  val ts = List("40000000500fccde38b255ec",
-               "40000000500fce0008486a2c",
-               "40000000500fce0d05980b84",
-               "40000000500fd4062674815c",
-               "40000000500fd611225d0134",
-               "40000000500fd7d522ff82c4",
-               "40000000500fd7fe1793fce4",
-               "40000000501007e7030c440c",
-               "4000000050100d802ebc978c",
-               "4000000050100d8c106958ec")
+  while(true) {
+    val localFiles : List[File] = new File(logPath)
+                                .listFiles
+                                .toList
+                                .filterNot(x => exclude.contains(x.getName))
+                                .sorted
 
-  System.out.println(SeriesCheck.timeSeriesRegular(ts.map(Tai64.convertTai64ToTime _)))
+    val localFileNames = localFiles.map(_.getName)
+    val remotePath = new Path("/user/omid/barn-test")
+    val remoteFiles = fs.listStatus(remotePath).toList.map(_.getPath.getName).sorted
 
+    //Find the first occurence of the last localFile
+
+    System.out.println("Checking out " + new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()))
+    Thread.sleep(1000)
+    (remoteFiles.lastOption match {
+      case Some(last) => localFiles.dropWhile(_.getName <= last) match {
+        case Nil => None
+        case x => Some(x)
+      }
+      case _ => localFiles.lastOption.map(_ => localFiles)
+    }).map { candidates =>
+        val combinedName = "/tmp/" + candidates.last.getName
+
+        System.out.println("I'm gonna combine " + candidates)
+
+        FileCombiner.combineFiles(candidates , new File(combinedName))
+        fs.copyFromLocalFile(true, true, new Path(combinedName), remotePath)
+
+        System.out.println("Done combining! Auf wiedersehen!")
+    }
+
+  }
 }
