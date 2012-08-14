@@ -1,3 +1,5 @@
+package barn
+
 import org.joda.time._
 import java.math.BigInteger
 
