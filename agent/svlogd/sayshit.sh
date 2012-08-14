@@ -1,8 +1,8 @@
-#cat /dev/urandom | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 500
-size_in_mb=5
-sizein_bytes=$(($size_in_mb * 1024 * 1024))
+g++ -o loggen gen.cpp
+
+size_in_mb=$1
 
 while true; do
-  dd if=/dev/urandom bs=$sizein_bytes count=1 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 500
+  ./loggen $size_in_mb
   sleep 1
 done
