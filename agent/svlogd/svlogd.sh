@@ -1,2 +1,3 @@
 #!/bin/bash
-svlogd -v -tt ../logs
+mkdir -p $1$2
+svlogd -v -tt $1$2
