@@ -51,8 +51,6 @@ object BarnHdfsWriter extends App {
           Hdfsfsfsfs.createPath(fs, remotePath)
           val remoteFiles = fs.listStatus(remotePath).toList.map(_.getPath.getName).sorted
 
-          //System.out.println("Checking out " + new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()))
-
           (remoteFiles.lastOption match {
             case Some(last) => localFiles.dropWhile(_.getName <= last) match {
               case Nil => None
