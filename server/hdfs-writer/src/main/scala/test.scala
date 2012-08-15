@@ -28,7 +28,6 @@ object BarnHdfsWriter extends App {
 
   while(true) {
 
-
     //Inotify doesn't work on OSX so for now I'm sleeping!
     Thread.sleep(1000)
 
