@@ -40,7 +40,7 @@ object BarnHdfsWriter extends App {
     servicesDirs.foreach { service : File =>
       System.out.println("service : " + service)
 
-      service.listFiles.toList.filterNot(x => exclude.contains(x.getName)) match {
+      service.listFiles.toList.filterNot(x => exclude.contains(x.getName)).sorted match {
         case null =>
           System.out.println("ERROR: For some reason I can't list files in " + service)
         case localFiles =>
