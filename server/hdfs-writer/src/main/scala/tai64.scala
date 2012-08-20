@@ -37,7 +37,7 @@ object Tai64 {
     val tai_int = java.lang.Long.parseLong(hex.substring(0,16), 16)
     val nano_int = java.lang.Long.parseLong(hex.substring(16, 24), 16)
     val seconds = tai_int - 4611686018427387904L
-    val basedate = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+    val basedate = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
     val timedelta = new Duration(seconds * 1000 + nano_int / 1000000)
 
     val final_ = basedate.plus(timedelta)
