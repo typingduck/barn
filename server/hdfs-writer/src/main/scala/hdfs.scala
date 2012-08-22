@@ -14,6 +14,8 @@ import org.apache.hadoop.io.{BytesWritable => BW, LongWritable => LW, SequenceFi
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, LocalFileSystem, RawLocalFileSystem}
 import org.apache.hadoop.io.SequenceFile
+import scalaz._
+import Scalaz._
 
 object Hdfsfsfsfs {
 
@@ -29,7 +31,7 @@ object Hdfsfsfsfs {
 
   def createPath(fs: FileSystem, path: Path) : Boolean = fs.mkdirs(path)
 
-  def createFileSystem(conf: Configuration) : FileSystem
-  = FileSystem.get(conf)
+  def createFileSystem(conf: Configuration) : Validation[String, FileSystem]
+  = FileSystem.get(conf).success
 }
 
