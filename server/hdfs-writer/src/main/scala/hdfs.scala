@@ -17,7 +17,7 @@ import org.apache.hadoop.io.SequenceFile
 import scalaz._
 import Scalaz._
 
-object Hdfsfsfsfs {
+object HDFS {
 
   type RemainingArgs = Array[String]
 
