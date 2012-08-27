@@ -23,23 +23,24 @@ object BarnHdfsWriter extends App {
       val excludeHdfs = List("tmp")
 
       val shipInterval = 10 //in seconds
-      val retention = 60
+      val retention = 60 //in seconds
 
       val result = for {
         fs           <- HDFS.createFileSystem(conf)
-        localFiles   <- listLocalFiles(serviceDir, excludeLocal)
         _            <- ensureHdfsDir(fs, hdfsDir)
         _            <- ensureHdfsDir(fs, hdfsTempDir)
         hdfsFiles    <- listHdfsFiles(fs, hdfsDir, excludeHdfs)
+
+        localFiles   <- listLocalFiles(serviceDir, excludeLocal)
         candidates   <- outstandingFiles(localFiles, hdfsFiles, shipInterval)
         concatted    <- concatCandidates(candidates, localTempDir)
+
         hdfsTempFile <- shipToHdfs(fs, concatted, hdfsTempDir)
         _            <- atomicRenameOnHdfs(fs, hdfsTempFile, hdfsDir)
+
         cleanupLimit <- earliestTimestamp(candidates)
-        ♬            <- cleanupLocal( serviceDir
-                                    , retention
-                                    , cleanupLimit
-                                    , excludeLocal )
+        ♬            <- cleanupLocal(serviceDir, retention, cleanupLimit,
+                                     excludeLocal)
       } yield ♬     // ♬ = tada! -- very limited in scope, hence the name.
 
       result ||| error
