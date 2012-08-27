@@ -1,19 +1,13 @@
 package barn
 
 import java.io.File
-import org.apache.hadoop.util.GenericOptionsParser
-import org.apache.hadoop.io.{BytesWritable => BW, LongWritable => LW, SequenceFile}
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.hadoop.io.SequenceFile
-import java.io.{FileInputStream, FileOutputStream, InputStreamReader, BufferedReader}
 import org.apache.commons.io.IOUtils
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.io.{FileInputStream, FileOutputStream}
 import scala.io.Source
 import org.apache.hadoop.io.{BytesWritable => BW, LongWritable => LW, SequenceFile}
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, LocalFileSystem, RawLocalFileSystem}
-import org.apache.hadoop.io.SequenceFile
 
 object FileCombiner {
 

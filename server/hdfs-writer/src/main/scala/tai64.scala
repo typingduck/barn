@@ -1,9 +1,8 @@
 package barn
 
-import org.joda.time._
-import java.math.BigInteger
-
 object Tai64 {
+
+  import org.joda.time._
 
   val conversion_table = List[(DateTime, Int)](
                       (new DateTime(1972, 01,  1, 0 , 0), 10),
