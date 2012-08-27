@@ -14,10 +14,10 @@ object BarnHdfsWriter extends App {
     _().toOption.fold( _.foreach { serviceDir =>
       info("Checking service " + serviceDir + " to sync.")
 
-      val hdfsDir = baseHdfsDir + serviceDir.getName
-      val hdfsTempDir = baseHdfsDir + serviceDir.getName + "/tmp/"
+      val hdfsDir = new HdfsDir(baseHdfsDir, serviceDir.getName)
+      val hdfsTempDir = new HdfsDir(hdfsDir, "tmp/")
 
-      val localTempDir = "/tmp"
+      val localTempDir = new Dir("/tmp")
 
       val excludeLocal = List(".gitignore", "target", "lock", "current")
       val excludeHdfs = List("tmp")
@@ -162,7 +162,7 @@ object BarnSteps {
   def shipToHdfs(fs: HdfsFileSystem, localFile: File, hdfsDir: HdfsDir)
   : Validation[String, HdfsFile] = validate ({
     info("Shipping " + localFile + " to " + hdfsDir + " @ " + fs.getUri)
-    fs.copyFromLocalFile(true, true, localFile.getPath, hdfsDir)
+    fs.copyFromLocalFile(true, true, new HdfsFile(localFile.getPath), hdfsDir)
     hdfsDir.suffix("/" + localFile.getName).success
   }, "Can't ship to hdfs from " + localFile + " to " + hdfsDir )
 
@@ -194,17 +194,14 @@ object BarnSteps {
   : Boolean = !(new Interval(base, DateTime.now(DateTimeZone.UTC))
     .toDuration.toStandardSeconds isLessThan Seconds.seconds(enoughSeconds))
 
-  def loadConf(args: Array[String]) : (Configuration, String, String) = {
+  def loadConf(args: Array[String]) : (Configuration, Dir, HdfsDir) = {
     val (remainingArgs, conf) = HDFS.parseHadoopConf(args)
-    val rootLogDir = remainingArgs(0)
-    val rootHdfsDir = remainingArgs(1)
+    val rootLogDir = new Dir(remainingArgs(0))
+    val rootHdfsDir = new HdfsDir(remainingArgs(1))
     (conf, rootLogDir, rootHdfsDir)
   }
 
-  implicit def string2File(str: String) : File = new File(str)
-  implicit def string2HdfsFile(str: String) : HdfsFile = new HdfsFile(str)
   def tap[A](a: A)(f: A => Unit) : A = {f(a); a}
-
 }
 
 object Logging {
