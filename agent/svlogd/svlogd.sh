@@ -10,7 +10,7 @@ LOG_DIRECTORY=$1$2
 cat >$LOG_DIRECTORY/config <<EOL
 #Dynamically generated, your changes will be overwritten and ignored
 s1000000
-n100
+n10
 t3600
 EOL
 
