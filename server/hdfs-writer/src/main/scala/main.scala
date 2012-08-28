@@ -19,6 +19,7 @@ object BarnHdfsWriter extends App {
 
   val shipInterval = 10 //in seconds
   val retention = 60 //in seconds
+  val minMB = 10 //minimum megabytes to keep for each service!
 
   continually(() => listSubdirectories(rootLogDir)).iterator.foreach {
     _().toOption.fold( _.foreach { serviceDir =>
@@ -47,7 +48,7 @@ object BarnHdfsWriter extends App {
 
         cleanupLimit <- earliestTimestamp(candidates)
         ♬            <- cleanupLocal(serviceDir, retention, cleanupLimit,
-                                     excludeLocal)
+                                     minMB, excludeLocal)
       } yield ♬     // ♬ = tada! -- very limited in scope, hence the name.
 
       result ||| error
@@ -159,22 +160,29 @@ object BarnSteps {
   def cleanupLocal(dir: Dir,
                    localRetention: Int,
                    cleanupLimit: DateTime,
+                   minMB: Int,
                    exclude: List[String] = List.empty)
   : Validation[String, Unit]
   = for {
       localFiles <- listLocalFiles(dir, exclude)
-      numDeleted <- validate(
-          localFiles.foldLeft(0) { (deletedSoFar, file) =>
-          val timestamp = Tai64.convertTai64ToTime(file.getName.drop(1))
+      numDeleted <- validate({
+        val sumSize = localFiles.foldLeft(0L) { (sum, f) => sum + f.length}
+        localFiles.foldLeft((0, sumSize)) {
+          case deletedSoFar -> curSize -> file =>
+            val timestamp = Tai64.convertTai64ToTime(file.getName.drop(1))
 
-          enoughTimePast(timestamp, localRetention) &&
-            timestamp.isBefore(cleanupLimit) match {
-            case true => file.delete; deletedSoFar + 1
-            case false => deletedSoFar
-          }
-
-        }.success, "Deletion of retained files failed.")
-    } yield tap(numDeleted) (x => info (x + " retained files deleted."))
+            enoughTimePast(timestamp, localRetention) &&
+              timestamp.isBefore(cleanupLimit) &&
+              curSize > minMB * 1024 * 1024  match {
+              case true =>
+                val fileLength = file.length
+                file.delete
+                (deletedSoFar + 1) -> (curSize - fileLength)
+              case false => deletedSoFar -> curSize
+            }
+        }
+      }.success, "Deletion of retained files failed.")
+    } yield tap(numDeleted) (x => info (x._1 + " retained files deleted and " + x._2 / (1024 * 1024) + " MB remained."))
 
   def listSubdirectories(dir: Dir)
   : Validation[String, List[Dir]]
