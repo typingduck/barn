@@ -169,10 +169,10 @@ object BarnSteps {
         val sumSize = localFiles.foldLeft(0L) { (sum, f) => sum + f.length}
         localFiles.foldLeft((0, sumSize)) {
           case deletedSoFar -> curSize -> file =>
-            val timestamp = Tai64.convertTai64ToTime(file.getName.drop(1))
+            val ts = Tai64.convertTai64ToTime(stripSvlogdPrefix(file.getName))
 
-            enoughTimePast(timestamp, localRetention) &&
-              timestamp.isBefore(cleanupLimit) &&
+            enoughTimePast(ts, localRetention) &&
+              ts.isBefore(cleanupLimit) &&
               curSize > minMB * 1024 * 1024  match {
               case true =>
                 val fileLength = file.length
@@ -193,9 +193,12 @@ object BarnSteps {
     def compare(o1: HdfsFile, o2: HdfsFile) = o1.getName compare o2.getName
   }
 
+  def stripSvlogdPrefix(svlogdFileName: String)
+  : String = svlogdFileName.drop(1)
+
   def earliestTimestamp(localFiles: List[File])
   : Validation[String, DateTime]
-  = Tai64.convertTai64ToTime(localFiles.head.getName.drop(1)).success
+  = Tai64.convertTai64ToTime(stripSvlogdPrefix(localFiles.head.getName)).success
 
   def isShippingTime(hdfsFiles: List[HdfsFile],
                    shippingIntervalInSeconds: Int,
@@ -217,7 +220,8 @@ object BarnSteps {
   : Validation[String, List[File]]
   = hdfsFiles.lastOption match {
     case Some(last) =>
-      localFiles.sorted.dropWhile(_.getName.drop(1) <= getTaiStamp(last)) match {
+      localFiles.sorted.dropWhile(f =>
+        stripSvlogdPrefix(f.getName) <= getTaiStamp(last)) match {
         case Nil => "No local files left to sync.".fail
         case x => x.success
       }
