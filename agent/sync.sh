@@ -20,11 +20,10 @@ while true; do
   for RSYNC_SOURCE in `ls "$RSYNC_LOG_TREE"`; do
     BASE_NAME=$(basename $RSYNC_SOURCE)
     HOST_NAME=$(hostname -f)
-    MINOR=_ #This will stand for port, in case multiple instances run on the same host
 
     echo "Checking for $RSYNC_LOG_TREE$RSYNC_SOURCE.. "
 
-    RSYNC_COMMAND_LINE="$RSYNC_FLAGS $RSYNC_EXCLUSIONS $RSYNC_LOG_TREE$RSYNC_SOURCE/* rsync://$BARN_RSYNC_ADDR/barn_logs/$BASE_NAME@$HOST_NAME@$MINOR/"
+    RSYNC_COMMAND_LINE="$RSYNC_FLAGS $RSYNC_EXCLUSIONS $RSYNC_LOG_TREE$RSYNC_SOURCE/* rsync://$BARN_RSYNC_ADDR/barn_logs/$BASE_NAME@$HOST_NAME/"
     CANDIDATES=$(eval "rsync --dry-run $RSYNC_COMMAND_LINE" | grep "@" | awk '{print $1}' | sort)
     for c in $CANDIDATES; do
       echo "Candidate is $c"
