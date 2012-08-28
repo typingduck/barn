@@ -182,7 +182,8 @@ object BarnSteps {
             }
         }
       }.success, "Deletion of retained files failed.")
-    } yield tap(numDeleted) (x => info (x._1 + " retained files deleted and " + x._2 / (1024 * 1024) + " MB remained."))
+    } yield tap(numDeleted) (x => info (x._1 + " retained files deleted and " +
+                                        x._2 / (1024 * 1024) + "MB remained."))
 
   def listSubdirectories(dir: Dir)
   : Validation[String, List[Dir]]
@@ -198,7 +199,8 @@ object BarnSteps {
 
   def earliestTimestamp(localFiles: List[File])
   : Validation[String, DateTime]
-  = Tai64.convertTai64ToTime(stripSvlogdPrefix(localFiles.head.getName)).success
+  = Tai64.
+      convertTai64ToTime(stripSvlogdPrefix(localFiles.head.getName)).success
 
   def isShippingTime(hdfsFiles: List[HdfsFile],
                    shippingIntervalInSeconds: Int,
@@ -239,7 +241,8 @@ object BarnSteps {
       " Candidates to combine: " + candidates)
 
   //I mean almost-atomic!
-  def atomicRenameOnHdfs(fs: HdfsFileSystem, src: HdfsFile, dest: HdfsDir, newName: String)
+  def atomicRenameOnHdfs(fs: HdfsFileSystem, src: HdfsFile, dest: HdfsDir,
+                         newName: String)
   : Validation[String, HdfsFile]
   = validate({
     val targetHdfsFile = new HdfsFile(dest, newName)
