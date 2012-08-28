@@ -66,6 +66,8 @@ object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
   import scalaz._
   import Scalaz._
 
+  import Utils._
+
   type Dir = File
   type HdfsDir = HdfsFile
 
@@ -111,8 +113,6 @@ object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
 
   def matches(hdfsFile: HdfsFile, serviceInfo: ServiceInfo) : Boolean
   = hdfsFile.getName.startsWith(encodeServiceInfo(serviceInfo))
-
-  def tap[A](a: A)(f: A => Unit) : A = {f(a); a}
 }
 
 object BarnSteps {
@@ -130,6 +130,8 @@ object BarnSteps {
 
   import Logging._
   import scala.math.Ordering
+
+  import Utils._
 
   /*
     File/Dir/Path on Local/Hdfs legend for the confusionary situation:
@@ -276,8 +278,6 @@ object BarnSteps {
     val rootHdfsDir = new HdfsDir(remainingArgs(1))
     (conf, rootLogDir, rootHdfsDir)
   }
-
-  def tap[A](a: A)(f: A => Unit) : A = {f(a); a}
 }
 
 object Logging {
