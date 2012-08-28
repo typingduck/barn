@@ -97,7 +97,7 @@ object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
 
   def decodeServiceInfo(serviceDir: Dir)
   : Validation[String, ServiceInfo]
-  = tap(serviceDir)(println).getName.split(delim) match {
+  = serviceDir.getName.split(delim) match {
     case Array(serviceName, hostName) =>
       ServiceInfo(serviceName, hostName).success
     case _ => ("Failed to extract service info for " + serviceDir).fail
