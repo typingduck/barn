@@ -10,33 +10,40 @@ object BarnHdfsWriter extends App {
 
   val (conf, rootLogDir, baseHdfsDir) = loadConf(args)
 
+  val PS = HdfsPlacementStrategy
+
+  val localTempDir = new Dir("/tmp")
+
+  val excludeLocal = List(".gitignore", "target", "lock", "current")
+  val excludeHdfs = List("tmp")
+
+  val shipInterval = 10 //in seconds
+  val retention = 60 //in seconds
+
   continually(() => listSubdirectories(rootLogDir)).iterator.foreach {
     _().toOption.fold( _.foreach { serviceDir =>
       info("Checking service " + serviceDir + " to sync.")
 
-      val hdfsDir = new HdfsDir(baseHdfsDir, serviceDir.getName)
-      val hdfsTempDir = new HdfsDir(hdfsDir, "tmp/")
-
-      val localTempDir = new Dir("/tmp")
-
-      val excludeLocal = List(".gitignore", "target", "lock", "current")
-      val excludeHdfs = List("tmp")
-
-      val shipInterval = 10 //in seconds
-      val retention = 60 //in seconds
-
       val result = for {
+        serviceInfo  <- PS.decodeServiceInfo(serviceDir)
         fs           <- HDFS.createFileSystem(conf)
+
+        hdfsDir      <- PS.targetDir(baseHdfsDir, serviceInfo)
+        hdfsTempDir  <- PS.targetTempDir(baseHdfsDir, serviceInfo)
         _            <- ensureHdfsDir(fs, hdfsDir)
         _            <- ensureHdfsDir(fs, hdfsTempDir)
-        hdfsFiles    <- listHdfsFiles(fs, hdfsDir, excludeHdfs)
+
+        allHdfsFiles <- listHdfsFiles(fs, hdfsDir, excludeHdfs)
+        hdfsFiles     = PS.sorted(PS.filter(allHdfsFiles, serviceInfo), serviceInfo)
+        _            <- isShippingTime(hdfsFiles, shipInterval, PS.extractTS)
 
         localFiles   <- listLocalFiles(serviceDir, excludeLocal)
-        candidates   <- outstandingFiles(localFiles, hdfsFiles, shipInterval)
+        candidates   <- outstandingFiles(localFiles, hdfsFiles, PS.extractTai)
         concatted    <- concatCandidates(candidates, localTempDir)
 
+        hdfsName     <- PS.targetName(candidates, serviceInfo)
         hdfsTempFile <- shipToHdfs(fs, concatted, hdfsTempDir)
-        _            <- atomicRenameOnHdfs(fs, hdfsTempFile, hdfsDir)
+        _            <- atomicRenameOnHdfs(fs, hdfsTempFile, hdfsDir, hdfsName)
 
         cleanupLimit <- earliestTimestamp(candidates)
         ♬            <- cleanupLocal(serviceDir, retention, cleanupLimit,
@@ -49,12 +56,72 @@ object BarnHdfsWriter extends App {
   }
 }
 
+object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
+
+  import java.io.File
+  import org.apache.hadoop.fs.{Path => HdfsFile}
+
+  import org.joda.time._
+
+  import scalaz._
+  import Scalaz._
+
+  type Dir = File
+  type HdfsDir = HdfsFile
+
+  type ServiceName = String
+  type HostName = String
+
+  val delim = '@'
+
+  case class ServiceInfo(serviceName: ServiceName, hostName: HostName)
+
+  def extractTai(hdfsFile: HdfsFile) : String
+  = hdfsFile.getName.split(delim).last
+
+  def extractTS(hdfsFile: HdfsFile) : DateTime
+  = Tai64.convertTai64ToTime(hdfsFile.getName.split("@").last)
+
+  def targetName(candidates: List[File], serviceInfo: ServiceInfo)
+  : Validation[String, String]
+  = (encodeServiceInfo(serviceInfo) + candidates.last.getName).success
+
+  def targetDir(baseHdfsDir: HdfsDir, serviceInfo: ServiceInfo)
+  : Validation[String, HdfsDir] = baseHdfsDir.success
+
+  def targetTempDir(baseHdfsDir: HdfsDir, serviceInfo: ServiceInfo)
+  : Validation[String, HdfsDir] = new HdfsDir(baseHdfsDir, "tmp/").success
+
+  def decodeServiceInfo(serviceDir: Dir)
+  : Validation[String, ServiceInfo]
+  = tap(serviceDir)(println).getName.split(delim) match {
+    case Array(serviceName, hostName) =>
+      ServiceInfo(serviceName, hostName).success
+    case _ => ("Failed to extract service info for " + serviceDir).fail
+  }
+
+  def encodeServiceInfo(serviceInfo: ServiceInfo) : String
+  = serviceInfo.serviceName + delim + serviceInfo.hostName
+
+  def filter(list: List[HdfsFile], service: ServiceInfo)
+  : List[HdfsFile] = list.filter(matches(_, service))
+
+  def sorted(list: List[HdfsFile], service: ServiceInfo)
+  : List[HdfsFile] = list.sortWith((a,b) => extractTai(a) < extractTai(b))
+
+  def matches(hdfsFile: HdfsFile, serviceInfo: ServiceInfo) : Boolean
+  = hdfsFile.getName.startsWith(encodeServiceInfo(serviceInfo))
+
+  def tap[A](a: A)(f: A => Unit) : A = {f(a); a}
+}
+
 object BarnSteps {
 
   import java.io.File
   import scala.util.control.Exception._
   import org.joda.time._
   import org.apache.commons.lang.exception.ExceptionUtils._
+  import org.apache.commons.lang.RandomStringUtils
   import org.apache.hadoop.fs.{Path => HdfsFile, FileSystem => HdfsFileSystem}
   import org.apache.hadoop.conf.Configuration
 
@@ -120,28 +187,36 @@ object BarnSteps {
   : Validation[String, DateTime]
   = Tai64.convertTai64ToTime(localFiles.head.getName.drop(1)).success
 
+  def isShippingTime(hdfsFiles: List[HdfsFile],
+                   shippingIntervalInSeconds: Int,
+                   tsConvert: HdfsFile => DateTime)
+  : Validation[String, Unit]
+  = hdfsFiles.sorted.lastOption match {
+    case Some(last) =>
+      val lastTimestamp = tsConvert(last)
+      enoughTimePast(lastTimestamp, shippingIntervalInSeconds) match {
+        case true => ().success
+        case false => ("I synced not long ago.").fail
+      }
+    case None => ().success
+  }
 
   def outstandingFiles(localFiles: List[File],
                        hdfsFiles: List[HdfsFile],
-                       shippingIntervalInSeconds: Int)
+                       getTaiStamp: HdfsFile => String)
   : Validation[String, List[File]]
-  = hdfsFiles.sorted.lastOption match {
+  = hdfsFiles.lastOption match {
     case Some(last) =>
-      val lastTimestamp = Tai64.convertTai64ToTime(last.getName.drop(1))
-      localFiles.sorted.dropWhile(_.getName <= last.getName) match {
+      localFiles.sorted.dropWhile(_.getName.drop(1) <= getTaiStamp(last)) match {
         case Nil => "No local files left to sync.".fail
-        case x if enoughTimePast(lastTimestamp, shippingIntervalInSeconds) =>
-          x.success
-        case x: List[_]  =>
-          (x.size.toString +
-            " new logs exist but I synced not long ago.").fail
+        case x => x.success
       }
     case _ => localFiles.success  //All files are left to be synced
   }
 
   def concatCandidates(candidates: List[File], targetDir: Dir)
   : Validation[String, File] = validate ({
-    val combinedName = candidates.last.getName
+    val combinedName = RandomStringUtils.randomAlphanumeric(20)
     val combinedLocalFile = new File(targetDir, combinedName)
     info("Combining " + candidates.size + " into " + combinedLocalFile)
     FileCombiner.combineIntoSeqFile(candidates , combinedLocalFile)
@@ -150,12 +225,13 @@ object BarnSteps {
       " Candidates to combine: " + candidates)
 
   //I mean almost-atomic!
-  def atomicRenameOnHdfs(fs: HdfsFileSystem, src: HdfsFile, dest: HdfsDir)
+  def atomicRenameOnHdfs(fs: HdfsFileSystem, src: HdfsFile, dest: HdfsDir, newName: String)
   : Validation[String, HdfsFile]
   = validate({
-    info("Moving " + src + " to " + dest + " @ "  + fs.getUri)
-    fs.rename(src, dest) match {
-      case true => new HdfsFile(dest, src.getName).success
+    val targetHdfsFile = new HdfsFile(dest, newName)
+    info("Moving " + src + " to " + targetHdfsFile + " @ "  + fs.getUri)
+    fs.rename(src, targetHdfsFile) match {
+      case true => targetHdfsFile.success
       case false => ("Rename " + src + " to " + dest + " failed.").fail
     }}, "Rename failed due to IO error")
 
