@@ -14,7 +14,7 @@ object BarnHdfsWriter extends App {
 
   val localTempDir = new Dir("/tmp")
 
-  val excludeLocal = List(".gitignore", "target", "lock", "current")
+  val excludeLocal = List("\\.gitignore", "target", "lock", "current", "\\..*")
   val excludeHdfs = List("tmp")
 
   val shipInterval = 10 //in seconds
@@ -259,7 +259,8 @@ object BarnSteps {
   : Validation[String, List[File]] = validate (
     serviceDir.listFiles
                .toList
-               .filterNot(x => exclude.contains(x.getName))
+               .filterNot(x => exclude.foldLeft(false) {
+                  (res, pattern) => res || x.getName.matches(pattern) })
                .success
   , "Can't list local files on: " + serviceDir)
 
