@@ -119,7 +119,9 @@ object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
 object BarnSteps {
 
   import java.io.File
+  import sun.misc.BASE64Decoder;
   import scala.util.control.Exception._
+  import scala.util.matching.Regex;
   import org.joda.time._
   import org.apache.commons.lang.exception.ExceptionUtils._
   import org.apache.commons.lang.RandomStringUtils
@@ -230,12 +232,23 @@ object BarnSteps {
     case _ => localFiles.success  //All files are left to be synced
   }
 
+  val BASE64 = "base64"
+  val syslogMatcher = "(?:^.*?\\[origin.*?x-encoding\\s*?=\\s*?\"\\s*(.*?)\\s*\".*?\\]\\s)?(.*)".r
+  val base64Decoder = new BASE64Decoder();
+
+  def processFormat(line: String) : Array[Byte]
+  = syslogMatcher.findFirstMatchIn(line) match {
+      case Some(syslogMatcher(BASE64,body)) => base64Decoder.decodeBuffer(body)
+      case Some(_) => line.getBytes
+      case None => throw new java.lang.Exception("Regexp match to extract x-encoding failed. Come save me.") //FIXME
+    }
+
   def concatCandidates(candidates: List[File], targetDir: Dir)
   : Validation[String, File] = validate ({
     val combinedName = RandomStringUtils.randomAlphanumeric(20)
     val combinedLocalFile = new File(targetDir, combinedName)
     info("Combining " + candidates.size + " into " + combinedLocalFile)
-    FileCombiner.combineIntoSeqFile(candidates , combinedLocalFile)
+    FileCombiner.combineIntoSeqFile(candidates, combinedLocalFile, processFormat)
     combinedLocalFile.success
   } , "Can't combine files into a sequence file." +
       " Candidates to combine: " + candidates)

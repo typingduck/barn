@@ -23,7 +23,9 @@ object FileCombiner {
   }
 
   //Combines local files into a local combined sequence file
-  def combineIntoSeqFile(localFiles: List[File], outputFile: File) = {
+  def combineIntoSeqFile(localFiles: List[File]
+                       , outputFile: File
+                       , f : String => Array[Byte]) = {
 
     val conf = new Configuration
     val fs = FileSystem.getLocal(conf)
@@ -39,7 +41,7 @@ object FileCombiner {
     localFiles.foreach( file =>
     Source.fromFile(file).getLines.foreach( line =>
       outputWriter.append( new LW(System.currentTimeMillis())
-                         , new BW(line.getBytes))
+                         , new BW(f(line)))
     ))
 
     outputWriter.close
