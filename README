@@ -1,22 +1,15 @@
-Prototype for new logging infrastructure.
+# Barn logging pipeline.
 
-On master:
+  //TODO
 
-  Run server/master.sh    # runs on 1025
-  Run server/replicate.sh localhost 1026   # replicates to localhost 1026
+# Credits:
 
-On slave:
+  * Omid Aladini
+  * Kim Altintop
+  * Brendan Hay
+  * Torsten Curdt
+  * Sean Treadway
 
-  Run server/slave.sh   #runs on localhost 1026
+# Usage
 
-On producer:
-
-  Run ./sync.sh that reads barn.conf and rsyncs to the host it points to
-  Run ./sayshit.sh | ./svlogd.sh to produce random log entries
-
-
-
-Run ./cleanup.sh to cleanup produced logs.
-
-
-./server/hdfs-writer is a work-in-progress to write to HDFS.
+  //TODO
