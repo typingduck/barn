@@ -6,9 +6,9 @@ if test "$1" == "" ; then
 fi
 
 cat >$RSYNCD_CONF_NAME <<EOL
-log file = ./sys/rsyncd-slave.log
-pid file = ./sys/rsyncd-slave.pid
-lock file = ./sys/rsync-slave.lock
+log file = ./tmp/rsyncd-slave.log
+pid file = ./tmp/rsyncd-slave.pid
+lock file = ./tmp/rsync-slave.lock
 port = $RSYNC_PORT
 
 [barn_logs]
