@@ -240,7 +240,7 @@ object BarnSteps {
   = syslogMatcher.findFirstMatchIn(line) match {
       case Some(syslogMatcher(BASE64,body)) => base64Decoder.decodeBuffer(body)
       case Some(_) => line.getBytes
-      case None => throw new java.lang.Exception("Regexp match to extract x-encoding failed. Come save me.") //FIXME
+      case None => throw new java.lang.Exception("Regexp match to extract body failed?? Come save me!") //FIXME
     }
 
   def concatCandidates(candidates: List[File], targetDir: Dir)
