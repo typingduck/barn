@@ -2,6 +2,7 @@
 
 if [[ "$1" == "" || "$2" == "" ]]; then
   echo "Usage: sync.sh RSYNC_HOST:RSYNC_PORT RSYNC_LOG_TREE";
+  echo "   RSYNC_LOG_TREE could be a ls-compatible glob"
   exit 0;
 fi
 
