@@ -14,12 +14,12 @@ RSYNC_EXCLUSIONS="--exclude=*.u --exclude=config --exclude=current --exclude=loc
 RSYNC_FLAGS="-c --verbose"  # --verbose is important since we use it to issue rsync incrementally
 RSYNC_LOG_TREE="$2"
 
-uname=`uname`                                                                   
-if [[ "$uname" == 'Linux' ]]; then                                              
-   SLEEP_COMMAND="inotifywait $INOTIFY_EXCLUSIONS --timeout 10 -q -e close_write $RSYNC_LOG_TREE/"
-elif [[ "$uname" == 'Darwin' ]]; then                                           
-   echo "I'm on OSX so I'm going to loop like crazy. Use Linux for inotify."       
-   SLEEP_COMMAND="sleep 10"                                                        
+uname=`uname`
+if [[ "$uname" == 'Linux' ]]; then
+   SLEEP_COMMAND="inotifywait $INOTIFY_EXCLUSIONS --timeout 3600 -q -e close_write $RSYNC_LOG_TREE/"
+elif [[ "$uname" == 'Darwin' ]]; then
+   echo "I'm on OSX so I'm going to loop like crazy. Use Linux for inotify."
+   SLEEP_COMMAND="sleep 10"
 fi
 
 while true; do  # will sleep inside the loop
