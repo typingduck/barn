@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ "$1" == "" || "$2" == "" ]]; then
-  echo "Usage: sync.sh RSYNC_HOST:RSYNC_PORT RSYNC_LOG_TREE";
+if [[ "$3" == "" ]]; then
+  echo "Usage: sync.sh RSYNC_HOST:RSYNC_PORT RSYNC_LOG_TREE SERVICE_NAME_SED_EXPRESSION";
   echo "   RSYNC_LOG_TREE could be a ls-compatible glob"
   exit 0;
 fi
@@ -10,7 +10,11 @@ BARN_RSYNC_ADDR=$1
 INOTIFY_EXCLUSIONS="--exclude '\.u' --exclude 'lock' --exclude 'current' --exclude '*~'"
 RSYNC_EXCLUSIONS="--exclude=*.u --exclude=config --exclude=current --exclude=lock --exclude=*~"
 RSYNC_FLAGS="-c --verbose"  # --verbose is important since we use it to issue rsync incrementally
-RSYNC_LOG_TREE="$2"
+RSYNC_LOG_TREE=$2
+
+# For exmample for sv: 's/\/etc\/service\/\(.*\)\/log\/main/\1/'
+# Or for any basename match: 's#.*/##'
+SERVICE_NAME_SED_EXPRESSION=$3
 
 function close {
   echo "Sending TERM to all children. Say goodbye kids!"
@@ -34,12 +38,12 @@ function sleepit {
 # Take one argument and sync it to the target barn rsync server
 function sync {
   RSYNC_SOURCE=$1
-  BASE_NAME=$(echo $RSYNC_SOURCE | sed 's/\//_/g')
+  SERVICE_NAME=$(echo $RSYNC_SOURCE | sed $SERVICE_NAME_SED_EXPRESSION)
   HOST_NAME=$(hostname -f)
 
-  echo "Checking for $RSYNC_SOURCE"
+  echo "Checking for $SERVICE_NAME"
 
-  RSYNC_COMMAND_LINE="$RSYNC_FLAGS $RSYNC_EXCLUSIONS $RSYNC_SOURCE/* rsync://$BARN_RSYNC_ADDR/barn_logs/$BASE_NAME@$HOST_NAME/"
+  RSYNC_COMMAND_LINE="$RSYNC_FLAGS $RSYNC_EXCLUSIONS $RSYNC_SOURCE/* rsync://$BARN_RSYNC_ADDR/barn_logs/$SERVICE_NAME@$HOST_NAME/"
   CANDIDATES=$(eval "rsync --dry-run $RSYNC_COMMAND_LINE" | grep -v "created directory" | grep "@" | awk '{print $1}' | sort)
   for c in $CANDIDATES; do
     echo "Candidate on $RSYNC_SOURCE is $c"
