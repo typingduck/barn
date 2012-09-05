@@ -16,9 +16,19 @@ RSYNC_LOG_TREE=$2
 # Or for any basename match: 's#.*/##'
 SERVICE_NAME_SED_EXPRESSION=$3
 
+killtree() {
+    local _pid=$1
+    local _sig=${2-TERM}
+    for _child in $(ps -o pid --no-headers --ppid ${_pid}); do
+        killtree ${_child} ${_sig}
+    done
+    kill -${_sig} ${_pid} > /dev/null 2>&1
+}
+
 function close {
   echo "Sending TERM to all children. Say goodbye kids!"
-  pkill -TERM -P $$
+  killtree $$
+  sleep 1
   exit 0
 }
 
