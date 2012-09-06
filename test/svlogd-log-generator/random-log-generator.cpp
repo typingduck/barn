@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -17,7 +18,24 @@ void gen_random(char *s, const int len) {
     s[len] = 0;
 }
 
+string rnd_prefix() {
+  int cat = rand() % 3;
+  switch(cat) {
+  case 0:
+    return "INFO[origin x-encoding=\"cat1\"] ";
+    break;
+  case 1:
+    return "INFO[origin x-encoding=\"cat2\"] ";
+    break;
+ case 2:
+    return "INFO[origin x-encoding=\"cat3\"] ";
+    break;
+  }
+}
+
 int main(int argc, char* argv[]) {
+
+  srand ( time(NULL) );
 
   if(argc < 2) {
     cout << "Usage: randomshit MB_OF_SHIT_TO_PRODUCE" << endl;
@@ -37,7 +55,7 @@ int main(int argc, char* argv[]) {
     len = rand() % (max_len - 1);
     gen_random(buffer, len);
     made_bytes += len + 1;
-    cout << buffer << "\n";
+    cout << rnd_prefix() <<  buffer << "\n";
   }
 
 }
