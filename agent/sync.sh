@@ -18,7 +18,7 @@ RSYNC_LOG_TREE_EXCLUDE="supervise" # Runit specific # FIXME
 # Or for any basename match: 's#.*/##'
 SERVICE_NAME_SED_EXPRESSION=$3
 
-killtree() {
+function killtree {
     local _pid=$1
     local _sig=${2-TERM}
     for _child in $(ps -o pid --no-headers --ppid ${_pid}); do
@@ -28,8 +28,8 @@ killtree() {
 }
 
 function close {
-  echo "Sending TERM to all children. Say goodbye kids!"
-  killtree $$
+  echo "Sending $1 to all children. Say goodbye kids!"
+  killtree $$ $1
   sleep 1
   exit 0
 }
@@ -78,8 +78,8 @@ for RSYNC_SOURCE in `find $RSYNC_LOG_TREE -type d -and -not -name $RSYNC_LOG_TRE
   ) &
 done
 
-trap close SIGTERM
-trap close SIGINT
+trap 'close TERM' SIGTERM
+trap 'close INT' SIGINT
 
 wait
 
