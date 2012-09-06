@@ -5,9 +5,11 @@ if test "$1" == "" ; then
   exit 0;
 fi
 
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
 size_in_mb=$1
 
 while true; do
-  ./loggen $size_in_mb
+  $DIR/loggen $size_in_mb
   sleep 1     # We should ( 1 - time_it_took_to_generate_logs ) instead
 done
