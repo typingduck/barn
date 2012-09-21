@@ -2,8 +2,13 @@ package barn
 
 object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
 
-  import java.io.File
-  import org.apache.hadoop.fs.{Path => HdfsFile}
+  /*
+    The placement strategy puts the log files in:
+
+    /YEAR/MONTH-DAY/
+
+  */
+
 
   import org.joda.time._
 
@@ -11,9 +16,7 @@ object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
   import Scalaz._
 
   import Utils._
-
-  type Dir = File
-  type HdfsDir = HdfsFile
+  import Types._
 
   type ServiceName = String
   type HostName = String
@@ -32,9 +35,10 @@ object HdfsPlacementStrategy { //TODO be a trait to be able to have multiple
   : Validation[String, String]
   = (encodeServiceInfo(serviceInfo) + candidates.last.getName).success
 
-  def targetDir(baseHdfsDir: HdfsDir, serviceInfo: ServiceInfo)
-  : Validation[String, HdfsDir]
-  = new HdfsDir(baseHdfsDir, datePath(DateTime.now)).success
+  // TODO create a lazy list of all possible directories
+  def targetDirs(baseHdfsDir: HdfsDir, serviceInfo: ServiceInfo)
+  : Validation[String, BufferedIterator[HdfsDir]]
+  = List(new HdfsDir(baseHdfsDir, datePath(DateTime.now))).iterator.buffered.success
 
   def datePath(date: DateTime)
   : HdfsDir

@@ -2,14 +2,13 @@ package barn
 
 object BarnSteps {
 
-  import java.io.File
   import sun.misc.BASE64Decoder;
   import scala.util.control.Exception._
   import scala.util.matching.Regex;
   import org.joda.time._
   import org.apache.commons.lang.exception.ExceptionUtils._
   import org.apache.commons.lang.RandomStringUtils
-  import org.apache.hadoop.fs.{Path => HdfsFile, FileSystem => HdfsFileSystem}
+  import org.apache.hadoop.fs.{FileSystem => HdfsFileSystem}
   import org.apache.hadoop.conf.Configuration
 
   import scalaz._
@@ -20,27 +19,19 @@ object BarnSteps {
 
   import Utils._
 
-  /*
-    File/Dir/Path on Local/Hdfs legend for the confusionary situation:
-
-    type Dir -> local directory
-    type File -> local File
-    type HdfsDir -> hdfs directory
-    type HdfsFile -> hdfs file
-
-    the word "path is intentionally avoided as much as possible.
-  */
-  type Dir = File
-  type HdfsDir = HdfsFile
+  import Types._
 
   val lineDelim = System.getProperty("line.separator")
 
-  def validate[U](body: => Validation[String,U], detail: String = null)
+  def validate[U](body: => Validation[String,U],
+                  detail: String = null,
+                  carryException: Boolean = true)
   : Validation[String, U]
   = allCatch either body fold ( exception =>
     detail match {
       case null => getStackTrace(exception).fail
-      case sth  => (detail + lineDelim + getStackTrace(exception)).fail
+      case sth if carryException => (detail + lineDelim + getStackTrace(exception)).fail
+      case sth if !carryException => (detail).fail
     } , identity)
 
   def cleanupLocal(dir: Dir,
@@ -55,7 +46,7 @@ object BarnSteps {
         val sumSize = localFiles.foldLeft(0L) { (sum, f) => sum + f.length}
         localFiles.foldLeft((0, sumSize)) {
           case deletedSoFar -> curSize -> file =>
-            val ts = Tai64.convertTai64ToTime(stripSvlogdPrefix(file.getName))
+            val ts = Tai64.convertTai64ToTime(svlogdFileNameToTaiString(file.getName))
 
             enoughTimePast(ts, localRetention) &&
               ts.isBefore(cleanupLimit) &&
@@ -80,19 +71,19 @@ object BarnSteps {
     def compare(o1: HdfsFile, o2: HdfsFile) = o1.getName compare o2.getName
   }
 
-  def stripSvlogdPrefix(svlogdFileName: String)
-  : String = svlogdFileName.drop(1)
+  def svlogdFileTimestamp(svlogdFile: File)
+  : Validation[String, DateTime] =
+    validate(Tai64.convertTai64ToTime(svlogdFileNameToTaiString(svlogdFile.getName)).success,
+    "Couldn't extract timestamp from svlogd file")
 
-  def earliestTimestamp(localFiles: List[File])
-  : Validation[String, DateTime]
-  = Tai64.
-      convertTai64ToTime(stripSvlogdPrefix(localFiles.head.getName)).success
+  def svlogdFileNameToTaiString(svlogdFileName: String)
+  : String = svlogdFileName.drop(1).dropRight(2)
 
-  def isShippingTime(hdfsFiles: List[HdfsFile],
+  def isShippingTime(sortedHdfsFiles: List[HdfsFile],
                    shippingIntervalInSeconds: Int,
                    tsConvert: HdfsFile => DateTime)
   : Validation[String, Unit]
-  = hdfsFiles.sorted.lastOption match {
+  = sortedHdfsFiles.lastOption match {
     case Some(last) =>
       val lastTimestamp = tsConvert(last)
       enoughTimePast(lastTimestamp, shippingIntervalInSeconds) match {
@@ -108,8 +99,8 @@ object BarnSteps {
   : Validation[String, List[File]]
   = hdfsFiles.lastOption match {
     case Some(last) =>
-      localFiles.sorted.dropWhile(f =>
-        stripSvlogdPrefix(f.getName) <= getTaiStamp(last)) match {
+      localFiles.dropWhile(f =>
+        svlogdFileNameToTaiString(f.getName) <= getTaiStamp(last)) match {
         case Nil => "No local files left to sync.".fail
         case x => x.success
       }
@@ -167,14 +158,16 @@ object BarnSteps {
         .success
    , "Can't get list of files on HDFS dir: " + hdfsDir)
 
-  def listLocalFiles(serviceDir : Dir, exclude: List[String] = List.empty)
-  : Validation[String, List[File]] = validate (
-    serviceDir.listFiles
-               .toList
-               .filterNot(x => exclude.foldLeft(false) {
-                  (res, pattern) => res || x.getName.matches(pattern) })
-               .success
-  , "Can't list local files on: " + serviceDir)
+  def listLocalFiles(dir : Dir, exclude: List[String] = List.empty)
+  : Validation[String, List[File]] = validate ({
+    dir.listFiles
+       .toList
+       .filterNot(_.isDirectory)
+       .filterNot(x => exclude.foldLeft(false) {
+          (res, pattern) => res || x.getName.matches(pattern) })
+       .sorted
+       .success}
+  , "Can't list local files on: " + dir)
 
   def ensureHdfsDir(fs: HdfsFileSystem, hdfsDir: HdfsDir)
   : Validation[String, HdfsDir] = validate(

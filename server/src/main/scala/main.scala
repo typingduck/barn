@@ -7,6 +7,7 @@ object BarnHdfsWriter extends App {
   import Scalaz._
   import Logging._
   import BarnSteps._
+  import Types._
 
   val (conf, rootLogDir, baseHdfsDir) = loadConf(args)
 
@@ -24,10 +25,12 @@ object BarnHdfsWriter extends App {
       info("Checking service " + serviceDir + " to sync.")
 
       val result = for {
-        serviceInfo  <- PS.decodeServiceInfo(serviceDir)
         fs           <- HDFS.createFileSystem(conf)
 
-        hdfsDir      <- PS.targetDir(baseHdfsDir, serviceInfo)
+        serviceInfo  <- PS.decodeServiceInfo(serviceDir)
+
+        hdfsDirs     <- PS.targetDirs(baseHdfsDir, serviceInfo)
+        hdfsDir       = hdfsDirs.head
         hdfsTempDir  <- PS.targetTempDir(baseHdfsDir, serviceInfo)
         _            <- ensureHdfsDir(fs, hdfsDir)
         _            <- ensureHdfsDir(fs, hdfsTempDir)
@@ -44,7 +47,7 @@ object BarnHdfsWriter extends App {
         hdfsTempFile <- shipToHdfs(fs, concatted, hdfsTempDir)
         _            <- atomicRenameOnHdfs(fs, hdfsTempFile, hdfsDir, hdfsName)
 
-        cleanupLimit <- earliestTimestamp(candidates)
+        cleanupLimit <- svlogdFileTimestamp(candidates.head)
         ♬            <- cleanupLocal(serviceDir, retention, cleanupLimit,
                                      minMB, excludeLocal)
       } yield ♬     // ♬ = tada! -- very limited in scope, hence the name.

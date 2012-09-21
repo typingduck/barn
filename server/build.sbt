@@ -24,6 +24,10 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "6.0.4"
 
 libraryDependencies += "com.dongxiguo" %% "zero-log" % "0.1.2"
 
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
+
 assemblySettings
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { x =>

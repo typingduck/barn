@@ -3,6 +3,32 @@ package barn
 object Tai64 {
 
   import org.joda.time._
+  import org.apache.commons.lang.StringUtils.leftPad
+
+  val baseDate = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
+  val taiBase = 4611686018427387904L
+
+  def convertDateToTai64(time: DateTime) : String = {
+    val extraSeconds = conversion_table.reverse.find(_._1.isBefore(time)).map(_._2).getOrElse(0)
+    val leapAdjusted = time.plusSeconds(extraSeconds)
+    val timedelta = new Duration(baseDate, leapAdjusted)
+    val seconds = timedelta.getStandardSeconds
+    val nanoInt = (timedelta.getMillis - timedelta.getStandardSeconds * 1000) * 1000000
+    val taiInt = seconds + taiBase
+    val intHex = java.lang.Long.toHexString(taiInt)
+    val nanoHex = java.lang.Long.toHexString(nanoInt)
+    leftPad(intHex, 16, '0') + leftPad(nanoHex, 8, '0')
+  }
+
+  def convertTai64ToTime(hex : String) : DateTime = {
+    val taiInt = java.lang.Long.parseLong(hex.substring(0,16), 16)
+    val nanoInt = java.lang.Long.parseLong(hex.substring(16, 24), 16)
+    val seconds = taiInt - taiBase
+    val timedelta = new Duration(seconds * 1000 + nanoInt / 1000000)
+    val final_ = baseDate.plus(timedelta)
+    val extraSeconds : Int = conversion_table.reverse.find(_._1.isBefore(final_)).map(_._2).getOrElse(0)
+    final_.plusSeconds(extraSeconds * -1)
+  }
 
   val conversion_table = List[(DateTime, Int)](
                       (new DateTime(1972, 01,  1, 0 , 0), 10),
@@ -32,19 +58,6 @@ object Tai64 {
                       (new DateTime(2009, 01,  1, 0 , 0), 34),
                       (new DateTime(2012, 07,  1, 0 , 0), 35))
 
-  def convertTai64ToTime(hex : String) : DateTime = {
-    val tai_int = java.lang.Long.parseLong(hex.substring(0,16), 16)
-    val nano_int = java.lang.Long.parseLong(hex.substring(16, 24), 16)
-    val seconds = tai_int - 4611686018427387904L
-    val basedate = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-    val timedelta = new Duration(seconds * 1000 + nano_int / 1000000)
-
-    val final_ = basedate.plus(timedelta)
-
-    val extraSeconds : Int = conversion_table.reverse.find(_._1.isBefore(final_)).map(_._2).getOrElse(0)
-
-    final_.plusSeconds(extraSeconds * -1)
-  }
 
 }
 
