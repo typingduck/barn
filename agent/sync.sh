@@ -15,7 +15,7 @@ RSYNC_LOG_TREE_EXCLUDE="supervise" # Runit specific # FIXME
 
 # For exmample for sv: 's/\/etc\/sv\/\(.*\)\/log\/\(.*\)/\1-\2/'
 # Extracts a name from paths like /etc/sv/*/log/*
-# Or for any basename match: 's#.*/##'
+# Or for any basename match: 's#.*/##;s/\(.*\)/\1@main/'
 SERVICE_NAME_SED_EXPRESSION=$3
 
 killtree() {
