@@ -1,6 +1,6 @@
 package barn
 
-object Logging {
+trait Logging {
 
   //private val (logger, formatter) = ZeroLoggerFactory.newLogger(this)
 
@@ -10,5 +10,4 @@ object Logging {
   def warn(s: String) = println(s)//logger.warning(s)
   def error(s: String) = println(s)//logger.severe(s)
 }
-
 

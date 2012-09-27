@@ -3,7 +3,7 @@ package barn
 object FileTestHelpers {
 
   import java.io.File
-  import barn.Utils.tap
+  import barn._
 
   def havingTemporaryDirStructure[T](base: File, subs: List[File], files: List[File])
                                           (f: => T) : T = {

@@ -6,7 +6,6 @@ object BarnSuiteGenerators {
   import org.scalacheck.Gen
   import org.joda.time._
   import Tai64._
-  import Types._
 
   val systemTemp = new Dir(System.getProperty("java.io.tmpdir"))
   val hdfsTemp = new HdfsDir("/tmp/")
