@@ -11,7 +11,7 @@ import BarnSuiteGenerators._
 
 import barn.placement.HdfsPlacementStrategy
 
-class TimeSuite
+class HdfsPlacementSuite
   extends FunSuite
   with Checkers
   with HdfsPlacementStrategy {
