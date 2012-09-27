@@ -39,7 +39,7 @@ trait HDFS extends Logging {
         .success
    , "Can't get list of files on HDFS dir: " + hdfsDir)
 
-  def randomName() : String = "hello"
+  def randomName() : String = scala.util.Random.alphanumeric.take(40).mkString
 
   def atomicShipToHdfs(fs: HdfsFileSystem
                      , src: File
@@ -60,17 +60,17 @@ trait HDFS extends Logging {
     info("Moving " + src + " to " + targetHdfsFile + " @ "  + fs.getUri)
     fs.rename(src, targetHdfsFile) match {
       case true => targetHdfsFile.success
-      case false => ("Rename " + src + " to " + dest + " failed.").fail
+      case false => ("Rename " + src + " to " + targetHdfsFile + " failed.").fail
     }}, "Rename failed due to IO error")
 
   def shipToHdfs(fs: HdfsFileSystem,
                  localFile: File,
-                 hdfsDir: HdfsDir)
+                 targetFile: HdfsFile)
   : Validation[String, HdfsFile] = validate ({
-    info("Shipping " + localFile + " to " + hdfsDir + " @ " + fs.getUri)
-    fs.copyFromLocalFile(true, true, new HdfsFile(localFile.getPath), hdfsDir)
-    hdfsDir.suffix("/" + localFile.getName).success
-  }, "Can't ship to hdfs from " + localFile + " to " + hdfsDir )
+    info("Shipping " + localFile + " to " + targetFile + " @ " + fs.getUri)
+    fs.copyFromLocalFile(true, true, new HdfsFile(localFile.getPath), targetFile)
+    targetFile.success
+  }, "Can't ship to hdfs from " + localFile + " to " + targetFile )
 
 }
 
