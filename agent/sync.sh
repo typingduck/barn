@@ -11,14 +11,26 @@ INOTIFY_EXCLUSIONS="--exclude '\.u' --exclude 'lock' --exclude 'current' --exclu
 RSYNC_EXCLUSIONS="--exclude=*.u --exclude=config --exclude=current --exclude=lock --exclude=*~"
 RSYNC_FLAGS="-c --verbose"  # --verbose is important since we use it to issue rsync incrementally
 RSYNC_LOG_TREE=$2
+RSYNC_LOG_TREE_EXCLUDE="supervise" # Runit specific # FIXME
 
-# For exmample for sv: 's/\/etc\/service\/\(.*\)\/log\/main/\1/'
+# For exmample for sv: 's/\/etc\/sv\/\(.*\)\/log\/\(.*\)/\1-\2/'
+# Extracts a name from paths like /etc/sv/*/log/*
 # Or for any basename match: 's#.*/##'
 SERVICE_NAME_SED_EXPRESSION=$3
 
+killtree() {
+    local _pid=$1
+    local _sig=${2-TERM}
+    for _child in $(ps -o pid --no-headers --ppid ${_pid}); do
+        killtree ${_child} ${_sig}
+    done
+    kill -${_sig} ${_pid} > /dev/null 2>&1
+}
+
 function close {
   echo "Sending TERM to all children. Say goodbye kids!"
-  pkill -TERM -P $$
+  killtree $$
+  sleep 1
   exit 0
 }
 
@@ -58,7 +70,7 @@ function sync {
 }
 
 # Main program is here
-for RSYNC_SOURCE in `find $RSYNC_LOG_TREE -type d`; do
+for RSYNC_SOURCE in `find $RSYNC_LOG_TREE -type d -and -not -name $RSYNC_LOG_TREE_EXCLUDE`; do
   (
     while true; do
       sync $RSYNC_SOURCE || sleepit $RSYNC_SOURCE
