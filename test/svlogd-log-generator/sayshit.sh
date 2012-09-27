@@ -6,8 +6,9 @@ if test "$1" == "" ; then
 fi
 
 size_in_mb=$1
+wd=$(dirname $0)
 
 while true; do
-  ./loggen $size_in_mb
+  $wd/loggen $size_in_mb
   sleep 1     # We should ( 1 - time_it_took_to_generate_logs ) instead
 done
