@@ -29,7 +29,8 @@ trait HdfsPlacementStrategy
                  , shipInterval: Int)
   : Validation[String, ShippingPlan] =
   for {
-     hdfsDir              <- targetDir(baseHdfsDir)
+     hdfsDirStream        <- targetDirs(baseHdfsDir)
+     hdfsDir               = hdfsDirStream.head
      hdfsTempDir          <- targetTempDir(baseHdfsDir)
      _                    <- ensureHdfsDir(fs, hdfsDir)
      _                    <- ensureHdfsDir(fs, hdfsTempDir)
@@ -74,6 +75,24 @@ trait HdfsPlacementStrategy
                  , taistamp)
   }
 
+  def datePath(baseHdfsDir: HdfsDir, db: DateBucket)
+  : HdfsDir = {
+    val pattern = "%04d/%02d-%02d"
+    new HdfsDir(baseHdfsDir, "/" + pattern.format(db.year, db.month, db.day))
+  }
+
+  def dateBucket(daysBefore : Int = 0) : DateBucket = {
+    val date = DateTime.now.minusDays(daysBefore)
+    DateBucket(date.getYear, date.getMonthOfYear, date.getDayOfMonth)
+  }
+
+  def dateStream(startingDaysBefore : Int = 0) : Stream[DateBucket] = {
+    def stream(b: Int) : Stream[DateBucket] =
+      dateBucket(startingDaysBefore) #:: stream(startingDaysBefore + 1)
+
+    stream(0)
+  }
+
   private val hdfsFileMatcher =
     "([0-9]{4}),([0-9]{2}),([0-9]{2}),(.*),(.*),(.*?),(.*).seq".r
 
@@ -87,17 +106,14 @@ trait HdfsPlacementStrategy
       case _ => ("Invalid HdfsFile name format " + hdfsFile) fail
     }, "Invalid HdfsFile name format " + hdfsFile)
 
-  def targetDir(baseHdfsDir: HdfsDir)
-  : Validation[String, HdfsDir]
-  = getPlacedFileInfo(baseHdfsDir).map(x => datePath(baseHdfsDir, x.bucket))
+  def targetDirs(baseHdfsDir: HdfsDir)
+  : Validation[String, Stream[HdfsDir]] = {
+    dateStream(0).map(datePath(baseHdfsDir, _)) success
+  }
 
   def targetTempDir(baseHdfsDir: HdfsDir)
   : Validation[String, HdfsDir]
-  = targetDir(baseHdfsDir).map(x => new HdfsDir(x, "/tmp"))
-
-  def datePath(baseHdfsDir: HdfsDir, db: DateBucket)
-  : HdfsDir
-  = new HdfsDir(baseHdfsDir, "/" + db.year + "/" + db.month + "-" + db.day)
+  = new HdfsDir(baseHdfsDir, "/tmp/") success
 
   implicit object PlacedFileOrderingByTaistamp extends Ordering[PlacedFileInfo] {
     def compare(o1: PlacedFileInfo, o2: PlacedFileInfo) : Int
