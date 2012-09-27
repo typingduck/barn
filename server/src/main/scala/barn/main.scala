@@ -27,6 +27,8 @@ object BarnHdfsWriter
 
       info("Checking service " + serviceDir + " to sync.")
 
+      Thread.sleep(1000) //Replace me with iNotify and concurrent shippings
+
       val result = for {
         serviceInfo <- decodeServiceInfo(serviceDir)
 
@@ -39,7 +41,6 @@ object BarnHdfsWriter
         localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
         candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
         concatted   <- concatCandidates(candidates, localTempDir)
-
 
         lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
         targetName_  = targetName(lastTaistamp, serviceInfo)
