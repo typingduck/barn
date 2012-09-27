@@ -19,9 +19,14 @@ main = do
         Z.withSocket c Z.Pub $ \s -> do
             Z.connect s "ipc:///tmp/rtaild"
 
-            forever $ BS.getLine >>= (\l -> Z.sendMulti s [topic, l])
+            forever $ do
+                l <- BS.getLine
+                Z.sendMulti s [topic, l]
+                BS.hPut stdout l >> BS.hPut stdout nl
 
     where
         opts (x:_) = return . BC.pack $ x
         opts _     = getProgName >>= \p -> ioError $ userError $
                      "Usage: " ++ p ++ " <topic>"
+
+        nl = BS.pack [0x0A]
