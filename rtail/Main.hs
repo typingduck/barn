@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Control.Monad      (forever)
+import Control.Exception  (finally)
 import Data.List          (intersperse, partition)
 import System.Environment (getArgs, getProgName)
 import System.IO
@@ -13,12 +14,14 @@ main :: IO ()
 main = do
     (addrs,topics) <- getArgs >>= opts
 
-    Z.withContext 1 $ \c -> Z.withSocket c Z.Sub $ \s -> do
-        mapM_ (Z.connect s . ("tcp://" ++)) addrs
-        mapM_ (Z.subscribe s) topics
+    Z.withContext 1 $ \c ->
+        Z.withSocket c Z.Sub $ \s -> do
+            mapM_ (Z.connect s . ("tcp://" ++)) addrs
+            mapM_ (Z.subscribe s) topics
 
-        forever $ Z.receiveMulti s >>=
-            mapM_ (BS.hPut stdout) . drop 1 . intersperse nl
+            forever $ Z.receiveMulti s >>=
+                mapM_ (BS.hPut stdout) . drop 1 . intersperse nl
+            `finally` mapM_ (Z.unsubscribe s) topics
 
     where
         opts ys@(x:xs) = do
