@@ -30,7 +30,7 @@ trait LocalPlacementStrategy
   : Validation[String, Unit]
   = for {
       localFiles <- listSortedLocalFiles(dir, exclude)
-      numDeleted <- validate({
+      deletion   <- validate({
         val sumSize = localFiles.foldLeft(0L) { (sum, f) => sum + f.length}
         localFiles.foldLeft((0, sumSize)) {
           case deletedSoFar -> curSize -> file =>
@@ -47,7 +47,7 @@ trait LocalPlacementStrategy
             }
         }
       }.success, "Deletion of retained files failed.")
-    } yield tap(numDeleted) (x => info (x._1 + " retained files deleted and " +
+    } yield tap(deletion) (x => info (x._1 + " retained files deleted and " +
                                         x._2 / (1024 * 1024) + "MB remained."))
 }
 
