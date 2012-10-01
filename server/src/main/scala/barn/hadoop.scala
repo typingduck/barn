@@ -63,9 +63,7 @@ trait HDFS extends Logging {
       case false => ("Rename " + src + " to " + targetHdfsFile + " failed.").fail
     }}, "Rename failed due to IO error")
 
-  def shipToHdfs(fs: HdfsFileSystem,
-                 localFile: File,
-                 targetFile: HdfsFile)
+  def shipToHdfs(fs: HdfsFileSystem, localFile: File, targetFile: HdfsFile)
   : Validation[String, HdfsFile] = validate ({
     info("Shipping " + localFile + " to " + targetFile + " @ " + fs.getUri)
     fs.copyFromLocalFile(true, true, new HdfsFile(localFile.getPath), targetFile)
