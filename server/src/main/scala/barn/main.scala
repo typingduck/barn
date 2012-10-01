@@ -34,9 +34,9 @@ object BarnHdfsWriter
 
         fs          <- createFileSystem(conf)
         plan        <- planNextShip(fs
-                                      , serviceInfo
-                                      , baseHdfsDir
-                                      , shipInterval)
+                                  , serviceInfo
+                                  , baseHdfsDir
+                                  , shipInterval)
 
         localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
         candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
