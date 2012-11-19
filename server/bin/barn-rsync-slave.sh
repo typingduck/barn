@@ -1,7 +1,9 @@
+#!/bin/bash
+
 RSYNCD_CONF_NAME="/tmp/barn-slave-rsyncd.conf"
 
 if test "$1" == "" ; then
-  echo "Usage: slave.sh RSYNC_PORT" >&2;
+  echo "Usage: $0 RSYNC_PORT" >&2;
   exit 0;
 fi
 

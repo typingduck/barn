@@ -1,7 +1,9 @@
+#!/bin/bash
+
 RSYNCD_CONF_NAME="/tmp/barn-master-rsyncd.conf"
 
 if test "$2" == "" ; then
-  echo "Usage: master.sh RSYNC_PORT RSYNC_LOG_DIR" >&2;
+  echo "Usage: $0 RSYNC_PORT RSYNC_LOG_DIR" >&2;
   exit 0;
 fi
 

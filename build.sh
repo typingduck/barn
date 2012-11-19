@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ "$1" == "" ]]; then
-  echo "Usage: build.sh VERSION" >&2
+  echo "Usage: $0 VERSION" >&2
   exit 1;
 fi
 
