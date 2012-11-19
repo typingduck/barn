@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ "$4" == "" ]]; then
-  echo "Usage: $0 RSYNC_HOST:RSYNC_PORT RSYNC_LOG_DIR SERVICE_NAME CATEGORY";
+  echo "Usage: $0 RSYNC_HOST:RSYNC_PORT RSYNC_SOURCE SERVICE_NAME CATEGORY";
   exit 0;
 fi
 
@@ -9,7 +9,7 @@ BARN_RSYNC_ADDR=$1
 INOTIFY_EXCLUSIONS="--exclude '\.u' --exclude 'lock' --exclude 'current' --exclude '*~'"
 RSYNC_EXCLUSIONS="--exclude=*.u --exclude=config --exclude=current --exclude=lock --exclude=*~"
 RSYNC_FLAGS="-c --verbose"  # --verbose is important since we use it to issue rsync incrementally
-RSYNC_LOG_TREE=$2
+RSYNC_SOURCE=$2
 
 SERVICE_NAME=$3
 CATEGORY=$4
