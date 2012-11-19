@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ "$3" == "" ]]; then
-  echo "Usage: $0 RSYNC_HOST:RSYNC_PORT RSYNC_LOG_DIR SERVICE_NAME";
+if [[ "$4" == "" ]]; then
+  echo "Usage: $0 RSYNC_HOST:RSYNC_PORT RSYNC_LOG_DIR SERVICE_NAME CATEGORY";
   exit 0;
 fi
 
@@ -12,6 +12,7 @@ RSYNC_FLAGS="-c --verbose"  # --verbose is important since we use it to issue rs
 RSYNC_LOG_TREE=$2
 
 SERVICE_NAME=$3
+CATEGORY=$4
 
 killtree() {
     local _pid=$1
@@ -47,9 +48,9 @@ function sync {
   RSYNC_SOURCE=$1
   HOST_NAME=$(hostname -f)
 
-  echo "Checking for $SERVICE_NAME"
+  echo "Checking for $SERVICE_NAME@$CATEGORY"
 
-  RSYNC_COMMAND_LINE="$RSYNC_FLAGS $RSYNC_EXCLUSIONS $RSYNC_SOURCE/* rsync://$BARN_RSYNC_ADDR/barn_logs/$SERVICE_NAME@$HOST_NAME/"
+  RSYNC_COMMAND_LINE="$RSYNC_FLAGS $RSYNC_EXCLUSIONS $RSYNC_SOURCE/* rsync://$BARN_RSYNC_ADDR/barn_logs/$SERVICE_NAME@$CATEGORY@$HOST_NAME/"
   CANDIDATES=$(eval "rsync --dry-run $RSYNC_COMMAND_LINE" | grep -v "created directory" | grep "@" | awk '{print $1}' | sort)
   for c in $CANDIDATES; do
     echo "Candidate on $RSYNC_SOURCE is $c"
