@@ -4,6 +4,8 @@ import scalaz._
 import Scalaz._
 import org.joda.time._
 
+object SvlogdFile extends SvlogdFile
+
 trait SvlogdFile {
   def svlogdFileTimestamp(svlogdFile: File)
   : Validation[String, DateTime] =

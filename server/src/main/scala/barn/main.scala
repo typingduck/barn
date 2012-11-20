@@ -8,7 +8,7 @@ import placement._
 object BarnHdfsWriter
   extends App
   with Logging
-  with HDFS
+  with Hadoop
   with SvlogdFile
   with FileCombiner
   with HdfsPlacementStrategy

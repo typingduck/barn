@@ -1,5 +1,7 @@
 package barn
 
+object LocalFS extends LocalFS
+
 trait LocalFS {
 
   import scalaz._

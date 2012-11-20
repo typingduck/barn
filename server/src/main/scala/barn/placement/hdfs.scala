@@ -10,7 +10,7 @@ import TimeUtils._
 
 trait HdfsPlacementStrategy
   extends Logging
-  with HDFS
+  with Hadoop
   with SvlogdFile {
 
   case class DateBucket(year: Int,

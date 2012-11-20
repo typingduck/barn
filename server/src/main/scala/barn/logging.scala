@@ -1,5 +1,7 @@
 package barn
 
+object Logging extends Logging
+
 trait Logging {
 
   //private val (logger, formatter) = ZeroLoggerFactory.newLogger(this)

@@ -12,6 +12,8 @@ import scalaz._
 import Scalaz._
 import org.apache.commons.lang.RandomStringUtils
 
+object FileCombiner extends FileCombiner
+
 trait FileCombiner extends Logging {
 
   //Combines files into a single file

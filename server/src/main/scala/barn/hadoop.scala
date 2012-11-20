@@ -1,6 +1,8 @@
 package barn
 
-trait HDFS extends Logging {
+object Hadoop extends Hadoop
+
+trait Hadoop extends Logging {
 
   import org.apache.hadoop.util.GenericOptionsParser
   import org.apache.hadoop.fs.{Path, FileSystem => HdfsFileSystem}

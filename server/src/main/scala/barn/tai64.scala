@@ -1,6 +1,8 @@
 package barn
 
-object Tai64 {
+object Tai64 extends Tai64
+
+trait Tai64 {
 
   import org.joda.time._
   import org.apache.commons.lang.StringUtils.leftPad
