@@ -1,37 +1,31 @@
 import AssemblyKeys._
+import com.twitter.sbt._
 
-name := "barn-hdfs-writer"
+name := "barn-server"
 
 version := "0.1"
 
-scalaVersion := "2.9.2"
+# FIXME: twitter's sbt-package-dist is only available for sbt 0.11.x + scala
+# 2.9.1
+scalaVersion := "2.9.1"
 
-resolvers += "SC Hosted" at "http://maven.int.s-cloud.net/content/groups/hosted"
+resolvers := Seq(
+  "SC Hosted" at "http://maven.int.s-cloud.net/content/groups/hosted"
+, "SC Proxy"  at "http://maven.int.s-cloud.net/content/groups/proxy"
+)
 
-resolvers += "SC Proxy"  at "http://maven.int.s-cloud.net/content/groups/proxy"
+libraryDependencies := Seq(
+  "joda-time" % "joda-time" % "2.0"
+, "org.joda" % "joda-convert" % "1.1"
+, "org.apache.hadoop" % "hadoop-core" % "0.20.2-cdh3u1"
+, "commons-io" % "commons-io" % "2.4"
+, "commons-lang" % "commons-lang" % "2.4"
+, "org.scalaz" %% "scalaz-core" % "6.0.4"
+, "com.dongxiguo" %% "zero-log" % "0.1.2"
+, "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+, "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
+)
 
-libraryDependencies += "joda-time" % "joda-time" % "2.0"
+PackageDist.newSettings
 
-libraryDependencies += "org.joda" % "joda-convert" % "1.1"
-
-libraryDependencies += "org.apache.hadoop" % "hadoop-core" % "0.20.2-cdh3u1"
-
-libraryDependencies += "commons-io" % "commons-io" % "2.4"
-
-libraryDependencies += "commons-lang" % "commons-lang" % "2.4"
-
-libraryDependencies += "org.scalaz" %% "scalaz-core" % "6.0.4"
-
-libraryDependencies += "com.dongxiguo" %% "zero-log" % "0.1.2"
-
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.6.1" % "test"
-
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
-
-assemblySettings
-
-excludedJars in assembly <<= (fullClasspath in assembly) map { x =>
-  val excluded = Seq("servlet-api", "jsp-api")
-  x filter (jar => excluded.exists(jar.data.getName.startsWith))
-}
-
+GitProject.gitSettings
