@@ -34,7 +34,7 @@ trait HdfsPlacementStrategy
      hdfsTempDir          <- targetTempDir(baseHdfsDir)
      _                    <- ensureHdfsDir(fs, hdfsDir)
      _                    <- ensureHdfsDir(fs, hdfsTempDir)
-     hdfsFiles            <- listHdfsFiles(fs, hdfsDir)
+     hdfsFiles            <- listFirstNonEmptyDir(fs, hdfsDirStream)
      lastShippedTaistamp  <- getLastShippedTaistamp(hdfsFiles, serviceInfo)
      lastShippedTimestamp  = lastShippedTaistamp.map(Tai64.convertTai64ToTime(_))
      _                    <- isShippingTime(lastShippedTimestamp, shipInterval)

@@ -41,6 +41,18 @@ trait Hadoop extends Logging {
         .success
    , "Can't get list of files on HDFS dir: " + hdfsDir)
 
+  def listFirstNonEmptyDir(fs: HdfsFileSystem, hdfsDirStream: Stream[HdfsDir])
+  : Validation[String, List[HdfsFile]] = {
+    hdfsDirStream.map(listHdfsFiles(fs, _)) find {
+      case Success(listOfFiles) => !listOfFiles.isEmpty
+      case Failure(_) => true
+    } match {
+      case Some(Success(listOfFiles)) => listOfFiles.success
+      case Some(Failure(error)) => error.fail
+      case None => List.empty[HdfsFile].success
+    }
+  }
+
   def randomName() : String = scala.util.Random.alphanumeric.take(40).mkString
 
   def atomicShipToHdfs(fs: HdfsFileSystem
