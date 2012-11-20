@@ -5,8 +5,8 @@ name := "barn-server"
 
 version := "0.1"
 
-# FIXME: twitter's sbt-package-dist is only available for sbt 0.11.x + scala
-# 2.9.1
+// FIXME: twitter's sbt-package-dist is only available for sbt 0.11.x + scala
+// 2.9.1
 scalaVersion := "2.9.1"
 
 resolvers := Seq(
