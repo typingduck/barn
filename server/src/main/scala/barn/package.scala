@@ -19,8 +19,8 @@ package object barn {
   */
   type Dir = File_
   type File = File_
-  type HdfsDir = HdfsFile
   type HdfsFile = Path
+  type HdfsDir = HdfsFile
 
   private val lineDelim = System.getProperty("line.separator")
 
