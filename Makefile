@@ -27,7 +27,7 @@ clean :
 	(cd server; sbt clean)
 
 start-hadoop : $(DAHOOP_HOME)
-	(cd $(DAHOOP_HOME); ./bin/hadoop namenode -format; ./bin/start-all.sh)
+	(cd $(DAHOOP_HOME); ./bin/hadoop namenode -force -format; ./bin/start-all.sh)
 
 stop-hadoop : $(DAHOOP_HOME)
 	(cd $(DAHOOP_HOME); ./bin/stop-all.sh)
