@@ -78,7 +78,7 @@ trait HdfsPlacementStrategy
   def datePath(baseHdfsDir: HdfsDir, db: DateBucket)
   : HdfsDir = {
     val pattern = "%04d/%02d-%02d"
-    new HdfsDir(baseHdfsDir, "/" + pattern.format(db.year, db.month, db.day))
+    new HdfsDir(baseHdfsDir, pattern.format(db.year, db.month, db.day))
   }
 
   def dateBucket(daysBefore : Int = 0) : DateBucket = {
@@ -113,7 +113,7 @@ trait HdfsPlacementStrategy
 
   def targetTempDir(baseHdfsDir: HdfsDir)
   : Validation[String, HdfsDir]
-  = new HdfsDir(baseHdfsDir, "/tmp/") success
+  = new HdfsDir(baseHdfsDir, "tmp/") success
 
   implicit object PlacedFileOrderingByTaistamp extends Ordering[PlacedFileInfo] {
     def compare(o1: PlacedFileInfo, o2: PlacedFileInfo) : Int
