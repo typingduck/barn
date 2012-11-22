@@ -9,6 +9,8 @@ trait Hadoop extends Logging {
   import org.apache.hadoop.conf.Configuration
   import scalaz._
   import Scalaz._
+  import scala.util.control.Exception.catching
+  import java.io.FileNotFoundException
 
   type RemainingArgs = Array[String]
 
@@ -21,35 +23,43 @@ trait Hadoop extends Logging {
   }
 
   def ensureHdfsDir(fs: HdfsFileSystem, hdfsDir: HdfsDir)
-  : Validation[String, HdfsDir] = validate(
+  : Validation[BarnError, HdfsDir] = validate(
     tap(hdfsDir)(createPath(fs, _)).success
   , "Can't ensure/create dirs on hdfs:"  + hdfsDir)
+
+  def pathExists(fs: HdfsFileSystem, hdfsDir: HdfsDir)
+  : Validation[BarnError, Boolean] = validate(
+    fs.exists(hdfsDir).success
+  , "Can't check existence of the path:" + hdfsDir)
 
   def createPath(fs: HdfsFileSystem, path: Path) : Boolean = fs.mkdirs(path)
 
   def createFileSystem(conf: Configuration)
-  : Validation[String, HdfsFileSystem]
+  : Validation[BarnError, HdfsFileSystem]
   = HdfsFileSystem.get(conf).success
 
   def listHdfsFiles(fs: HdfsFileSystem, hdfsDir: HdfsDir)
-  : Validation[String, List[HdfsFile]]
+  : Validation[BarnError, List[HdfsFile]]
   = validate(
-      fs.listStatus(hdfsDir)
-        .toList
-        .filterNot(x => x.isDir)
-        .map(_.getPath)
-        .success
+      catching(classOf[FileNotFoundException])
+      .either(fs.listStatus(hdfsDir)).fold(
+        _ => FileNotFound("Path " + hdfsDir + " doesn't exist to list") fail,
+        _ match {
+          case null => FileNotFound("Path " + hdfsDir + " doesn't exist to list") fail
+          case fileList => fileList.toList.filterNot(_.isDir).map(_.getPath).success
+        })
    , "Can't get list of files on HDFS dir: " + hdfsDir)
 
   def listFirstNonEmptyDir(fs: HdfsFileSystem, hdfsDirStream: Stream[HdfsDir])
-  : Validation[String, List[HdfsFile]] = {
+  : Validation[BarnError, List[HdfsFile]] = {
     hdfsDirStream.map(listHdfsFiles(fs, _)) find {
       case Success(listOfFiles) => !listOfFiles.isEmpty
+      case Failure(FileNotFound(str)) => false
       case Failure(_) => true
     } match {
-      case Some(Success(listOfFiles)) => listOfFiles.success
-      case Some(Failure(error)) => error.fail
       case None => List.empty[HdfsFile].success
+      case Some(Success(listOfFiles)) => listOfFiles.success
+      case Some(Failure(ioException)) => ioException.fail
     }
   }
 
@@ -59,7 +69,8 @@ trait Hadoop extends Logging {
                      , src: File
                      , dest: HdfsDir
                      , hdfsName: String
-                     , temp: HdfsDir) : Validation[String, HdfsFile]
+                     , temp: HdfsDir)
+  : Validation[BarnError, HdfsFile]
   = for {
       hdfsTempFile <- shipToHdfs(fs, src, new HdfsDir(temp, randomName))
       renamedFile  <- atomicRenameOnHdfs(fs, hdfsTempFile, dest , hdfsName)
@@ -68,17 +79,19 @@ trait Hadoop extends Logging {
   def atomicRenameOnHdfs(fs: HdfsFileSystem
                        , src: HdfsFile
                        , dest: HdfsDir
-                       , newName: String) : Validation[String, HdfsFile]
+                       , newName: String)
+  : Validation[BarnError, HdfsFile]
   = validate({
     val targetHdfsFile = new HdfsFile(dest, newName)
     info("Moving " + src + " to " + targetHdfsFile + " @ "  + fs.getUri)
     fs.rename(src, targetHdfsFile) match {
       case true => targetHdfsFile.success
-      case false => ("Rename " + src + " to " + targetHdfsFile + " failed.").fail
+      case false =>
+        RenameFailed("Rename " + src + " to " + targetHdfsFile + " failed.").fail
     }}, "Rename failed due to IO error")
 
   def shipToHdfs(fs: HdfsFileSystem, localFile: File, targetFile: HdfsFile)
-  : Validation[String, HdfsFile] = validate ({
+  : Validation[BarnError, HdfsFile] = validate ({
     info("Shipping " + localFile + " to " + targetFile + " @ " + fs.getUri)
     fs.copyFromLocalFile(true, true, new HdfsFile(localFile.getPath), targetFile)
     targetFile.success

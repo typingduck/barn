@@ -27,7 +27,7 @@ trait HdfsPlacementStrategy
                  , serviceInfo: LocalServiceInfo
                  , baseHdfsDir: HdfsDir
                  , shipInterval: Int)
-  : Validation[String, ShippingPlan] =
+  : Validation[BarnError, ShippingPlan] =
   for {
      hdfsDirStream        <- targetDirs(baseHdfsDir)
      hdfsDir               = hdfsDirStream.head
@@ -41,7 +41,7 @@ trait HdfsPlacementStrategy
   } yield ShippingPlan(hdfsDir, hdfsTempDir, lastShippedTaistamp)
 
   def getLastShippedTaistamp(hdfsFiles: List[HdfsFile], serviceInfo: LocalServiceInfo)
-  : Validation[String, Option[String]]
+  : Validation[BarnError, Option[String]]
   = for {
       hdfsFilesPlaceInfo <- collapseValidate(hdfsFiles.map(getPlacedFileInfo(_)))
       hdfsFilesFiltered   = filter(hdfsFilesPlaceInfo, serviceInfo)
@@ -50,12 +50,12 @@ trait HdfsPlacementStrategy
    } yield lastShippedFile map(_.taistamp)
 
   def isShippingTime(lastShippedTimestamp: Option[DateTime], shippingInterval: Int)
-  : Validation[String, Unit]
+  : Validation[BarnError, Unit]
   = lastShippedTimestamp match {
     case Some(lastTimestamp) =>
       enoughTimePast(lastTimestamp, shippingInterval) match {
         case true => () success
-        case false => "I synced not long ago." fail
+        case false => SyncThrottled("I synced not long ago.") fail
       }
     case None => ().success
   }
@@ -97,22 +97,22 @@ trait HdfsPlacementStrategy
     "([0-9]{4}),([0-9]{2}),([0-9]{2}),(.*),(.*),(.*?),(.*).seq".r
 
   def getPlacedFileInfo(hdfsFile: HdfsFile)
-  : Validation[String, PlacedFileInfo]
+  : Validation[BarnError, PlacedFileInfo]
   = validate(
     hdfsFile.getName match {
       case hdfsFileMatcher(year, month, day, host, service, category, taistamp) =>
         PlacedFileInfo(DateBucket(year.toInt, month.toInt, day.toInt)
                                 , host, service, category, taistamp) success
-      case _ => ("Invalid HdfsFile name format " + hdfsFile) fail
+      case _ => InvalidNameFormat("Invalid HdfsFile name format " + hdfsFile) fail
     }, "Invalid HdfsFile name format " + hdfsFile)
 
   def targetDirs(baseHdfsDir: HdfsDir)
-  : Validation[String, Stream[HdfsDir]] = {
+  : Validation[BarnError, Stream[HdfsDir]] = {
     dateStream(0).map(datePath(baseHdfsDir, _)) success
   }
 
   def targetTempDir(baseHdfsDir: HdfsDir)
-  : Validation[String, HdfsDir]
+  : Validation[BarnError, HdfsDir]
   = new HdfsDir(baseHdfsDir, "tmp/") success
 
   implicit object PlacedFileOrderingByTaistamp extends Ordering[PlacedFileInfo] {

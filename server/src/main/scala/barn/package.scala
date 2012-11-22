@@ -22,18 +22,27 @@ package object barn {
   type HdfsFile = Path
   type HdfsDir = HdfsFile
 
+  sealed trait BarnError
+  case class ThrownException(str: String) extends BarnError
+  case class RenameFailed(str: String) extends BarnError
+  case class NothingToSync(str: String) extends BarnError
+  case class SyncThrottled(str: String) extends BarnError
+  case class InvalidNameFormat(str: String) extends BarnError
+  case class CombinedError(errors: BarnError*) extends BarnError
+  case class FileNotFound(str: String) extends BarnError
+
   private val lineDelim = System.getProperty("line.separator")
 
-  def validate[U](body: => Validation[String,U],
+  def validate[U](body: => Validation[BarnError,U],
                   detail: String = null,
                   carryException: Boolean = true)
-  : Validation[String, U]
-  = allCatch either body fold ( exception =>
+  : Validation[BarnError, U]
+  = allCatch either body fold ( exception => ThrownException(
     detail match {
-      case null => getStackTrace(exception).fail
-      case sth if carryException => (detail + lineDelim + getStackTrace(exception)).fail
-      case sth if !carryException => (detail).fail
-    } , identity)
+      case null => getStackTrace(exception)
+      case sth if carryException => (detail + lineDelim + getStackTrace(exception))
+      case sth if !carryException => (detail)
+    }).fail , identity)
 
   def tap[A](a: A)(f: A => Unit) : A = {f(a); a}
 
@@ -43,6 +52,7 @@ package object barn {
   }
 
   implicit def errorConcat(a:String, b:String) = a + " and " + b
+  implicit def errorConcat(a:BarnError, b:BarnError) = CombinedError(a,b)
 
   def collapseValidate[A, B](v: List[Validation[A,B]])
                             (implicit op : (A,A) => A)

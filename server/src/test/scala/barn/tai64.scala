@@ -7,7 +7,7 @@ import org.scalatest.FunSuite
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.prop.Checkers
 import org.scalacheck.Prop._
-import BarnSuiteGenerators._
+import DateGenerators._
 
 class Tai64Suite
   extends FunSuite
@@ -16,7 +16,6 @@ class Tai64Suite
 
   import org.scalacheck.Arbitrary._
   import org.scalacheck.Prop._
-  import BarnSuiteGenerators._
 
   test("Tai64 timestamp conversion should be one-to-one") {
     check(

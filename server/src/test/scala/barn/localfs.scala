@@ -5,8 +5,8 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.prop.Checkers
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop._
-import BarnSuiteGenerators._
-import FileTestHelpers._
+import LocalFSGenerators._
+import LocalFSTestHelpers._
 
 class LocalFSSuite extends FunSuite with Checkers with barn.LocalFS {
 

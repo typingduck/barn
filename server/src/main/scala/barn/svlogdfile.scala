@@ -8,7 +8,7 @@ object SvlogdFile extends SvlogdFile
 
 trait SvlogdFile {
   def svlogdFileTimestamp(svlogdFile: File)
-  : Validation[String, DateTime] =
+  : Validation[BarnError, DateTime] =
     validate(Tai64.convertTai64ToTime(svlogdFileNameToTaiString(svlogdFile.getName)).success,
     "Couldn't extract timestamp from svlogd file")
 

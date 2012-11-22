@@ -11,5 +11,8 @@ trait Logging {
   def info(s: String) = println(s)//logger.info(s)
   def warn(s: String) = println(s)//logger.warning(s)
   def error(s: String) = println(s)//logger.severe(s)
+
+  def logBarnError(s: BarnError) = println(s.toString) // logger....
+
 }
 

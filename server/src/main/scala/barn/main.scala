@@ -60,9 +60,9 @@ object BarnHdfsWriter
 
       } yield ()
 
-      result ||| error
+      result ||| logBarnError
 
-    }, error _)
+    }, logBarnError _)
   }
 
   import org.apache.hadoop.conf.Configuration
@@ -75,12 +75,12 @@ object BarnHdfsWriter
   }
 
   def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String])
-  : Validation[String, List[File]]
+  : Validation[BarnError, List[File]]
   = lastTaistamp match {
     case Some(taistamp) =>
       localFiles dropWhile(f =>
         svlogdFileNameToTaiString(f getName) <= taistamp) match {
-        case Nil => "No local files left to sync." fail
+        case Nil => NothingToSync("No local files left to sync.") fail
         case x => x success
       }
     case None => localFiles success  //All files are left to be synced

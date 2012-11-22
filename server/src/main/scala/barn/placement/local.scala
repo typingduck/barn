@@ -15,11 +15,11 @@ trait LocalPlacementStrategy
   val delim = '@'
 
   def decodeServiceInfo(serviceDir: Dir)
-  : Validation[String, LocalServiceInfo]
+  : Validation[BarnError, LocalServiceInfo]
   = serviceDir.getName.split(delim) match {
     case Array(service, category, host) =>
       LocalServiceInfo(service, category, host) success
-    case _ => ("Failed to extract service info for " + serviceDir) fail
+    case _ => InvalidNameFormat("Failed to extract service info for " + serviceDir) fail
   }
 
   def cleanupLocal(dir: Dir,
@@ -27,7 +27,7 @@ trait LocalPlacementStrategy
                    cleanupLimit: DateTime,
                    minMB: Int,
                    exclude: List[String] = List empty)
-  : Validation[String, Unit]
+  : Validation[BarnError, Unit]
   = for {
       localFiles <- listSortedLocalFiles(dir, exclude)
       deletion   <- validate({

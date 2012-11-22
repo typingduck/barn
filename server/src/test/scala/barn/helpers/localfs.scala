@@ -1,6 +1,6 @@
 package barn
 
-object FileTestHelpers {
+object LocalFSTestHelpers {
 
   import java.io.File
   import barn._
