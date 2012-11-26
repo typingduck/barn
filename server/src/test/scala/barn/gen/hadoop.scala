@@ -9,7 +9,8 @@ trait HadoopGenerators extends CommonGenerators {
 
   val hdfsTemp = new HdfsDir("/tmp/")
 
-  def genHdfsDirectory(base: HdfsDir) = for {
+  def genHdfsDirectory(base: HdfsDir = hdfsTemp)
+  = for {
     dir <- genNonEmptyAlphaNumStr
   } yield new HdfsDir(base, dir)
 

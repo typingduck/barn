@@ -4,6 +4,7 @@ import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.prop.Checkers
+import org.apache.hadoop.conf.Configuration
 
 class HadoopSuite
   extends FunSuite
@@ -22,7 +23,8 @@ class HadoopSuite
 
   import scala.util.Random.nextDouble
 
-  val (_, conf) = parseHadoopConf(Array("-fs", "hdfs://localhost:9000"))
+  val conf = tap(new Configuration()){_.set("fs.default.name"
+                                          , "hdfs://localhost:9000")}
   val fs = Hadoop.createFileSystem(conf).toOption.get
 
   test("should correctly list files in a HDFS directory") {
@@ -69,6 +71,5 @@ class HadoopSuite
       }
     )
   }
-
 
 }

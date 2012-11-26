@@ -8,10 +8,14 @@ import barn._
 import org.apache.hadoop.fs.{FileSystem => HdfsFileSystem}
 import TimeUtils._
 
+object HdfsPlacementStrategy extends HdfsPlacementStrategy
+
 trait HdfsPlacementStrategy
   extends Logging
   with Hadoop
   with SvlogdFile {
+
+  val maxLookBack = 10 //days
 
   case class DateBucket(year: Int,
                         month: Int,
@@ -27,18 +31,21 @@ trait HdfsPlacementStrategy
                  , serviceInfo: LocalServiceInfo
                  , baseHdfsDir: HdfsDir
                  , shipInterval: Int)
-  : Validation[BarnError, ShippingPlan] =
-  for {
-     hdfsDirStream        <- targetDirs(baseHdfsDir)
-     hdfsDir               = hdfsDirStream.head
-     hdfsTempDir          <- targetTempDir(baseHdfsDir)
-     _                    <- ensureHdfsDir(fs, hdfsDir)
-     _                    <- ensureHdfsDir(fs, hdfsTempDir)
-     hdfsFiles            <- listFirstNonEmptyDir(fs, hdfsDirStream)
-     lastShippedTaistamp  <- getLastShippedTaistamp(hdfsFiles, serviceInfo)
-     lastShippedTimestamp  = lastShippedTaistamp.map(Tai64.convertTai64ToTime(_))
-     _                    <- isShippingTime(lastShippedTimestamp, shipInterval)
-  } yield ShippingPlan(hdfsDir, hdfsTempDir, lastShippedTaistamp)
+  : Validation[BarnError, ShippingPlan] = {
+
+    val hdfsTempDir = targetTempDir(baseHdfsDir)
+    val hdfsDirStream = targetDirs(baseHdfsDir, maxLookBack)
+    val hdfsDir = hdfsDirStream.head
+
+    for {
+       _                    <- ensureHdfsDir(fs, hdfsDir)
+       _                    <- ensureHdfsDir(fs, hdfsTempDir)
+       hdfsFiles            <- listFirstNonEmptyDir(fs, hdfsDirStream)
+       lastShippedTaistamp  <- getLastShippedTaistamp(hdfsFiles, serviceInfo)
+       lastShippedTimestamp  = lastShippedTaistamp.map(Tai64.convertTai64ToTime(_))
+       _                    <- isShippingTime(lastShippedTimestamp, shipInterval)
+    } yield ShippingPlan(hdfsDir, hdfsTempDir, lastShippedTaistamp)
+  }
 
   def getLastShippedTaistamp(hdfsFiles: List[HdfsFile], serviceInfo: LocalServiceInfo)
   : Validation[BarnError, Option[String]]
@@ -87,10 +94,11 @@ trait HdfsPlacementStrategy
   }
 
   def dateStream(startingDaysBefore : Int = 0) : Stream[DateBucket] = {
-    def stream(b: Int) : Stream[DateBucket] =
-      dateBucket(startingDaysBefore) #:: stream(startingDaysBefore + 1)
 
-    stream(0)
+    def stream(b: Int) : Stream[DateBucket] =
+      dateBucket(b) #:: stream(b + 1)
+
+    stream(startingDaysBefore)
   }
 
   private val hdfsFileMatcher =
@@ -106,14 +114,14 @@ trait HdfsPlacementStrategy
       case _ => InvalidNameFormat("Invalid HdfsFile name format " + hdfsFile) fail
     }, "Invalid HdfsFile name format " + hdfsFile)
 
-  def targetDirs(baseHdfsDir: HdfsDir)
-  : Validation[BarnError, Stream[HdfsDir]] = {
-    dateStream(0).map(datePath(baseHdfsDir, _)) success
+  def targetDirs(baseHdfsDir: HdfsDir, maxLookBack: Int)
+  : Stream[HdfsDir] = {
+    dateStream(0).take(maxLookBack).map(datePath(baseHdfsDir, _))
   }
 
   def targetTempDir(baseHdfsDir: HdfsDir)
-  : Validation[BarnError, HdfsDir]
-  = new HdfsDir(baseHdfsDir, "tmp/") success
+  : HdfsDir
+  = new HdfsDir(baseHdfsDir, "tmp/")
 
   implicit object PlacedFileOrderingByTaistamp extends Ordering[PlacedFileInfo] {
     def compare(o1: PlacedFileInfo, o2: PlacedFileInfo) : Int

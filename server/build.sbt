@@ -29,3 +29,5 @@ libraryDependencies := Seq(
 PackageDist.newSettings
 
 GitProject.gitSettings
+
+testOptions in Test += Tests.Argument("-oDF")
