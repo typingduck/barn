@@ -17,7 +17,7 @@ object BarnHdfsWriter
   val (conf, rootLogDir, baseHdfsDir) = loadConf(args)
 
   val localTempDir = new Dir("/tmp")
-  val excludeLocal = List("\\.gitignore", "target", "lock", "current", "\\..*")
+  val excludeLocal = List("\\..*")
 
   val (shipInterval, retention) = (10, 60) //in seconds
   val minMB = 10 //minimum megabytes to keep for each service!
