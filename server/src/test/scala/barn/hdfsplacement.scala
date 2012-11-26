@@ -90,7 +90,7 @@ class HdfsPlacementSuite
       })
    }
 
-/*
+
   test("Should refrain from shipping if shippingInterval isnt't reached") {
 
     check(
@@ -111,7 +111,7 @@ class HdfsPlacementSuite
           val lastShippedFile = new HdfsFile(targetDir, targetName_)
           val shouldThrottle = enoughTimePast(lastShippedDate, shippingInterval)
 
-          fs.create(lastShippedFile)
+          fs.create(lastShippedFile).close
 
           planNextShip(fs, serviceInfo, baseDir, shippingInterval) match {
             case Failure(SyncThrottled(_)) =>
@@ -129,7 +129,9 @@ class HdfsPlacementSuite
 
             case other => false :| "Plan isn't expected" + other
           }
+
+          fs.delete(lastShippedFile, true)
       })
   }
-*/
+
 }
