@@ -1,4 +1,4 @@
-.PHONY: all clean deps test fpm start-hadoop stop-hadoop
+.PHONY: all cabal cabal-dev clean deps test fpm start-hadoop stop-hadoop
 
 AGENT_VERSION := 0.5.0
 AGENT_DEB := barn-agent_$(AGENT_VERSION)_all.deb
@@ -7,15 +7,20 @@ SERVER_VERSION := $(shell cat server/build.sbt | sed -n -E -e 's/version[[:space
 SERVER_JAR := server/target/barn-hdfs-writer-assembly-$(SERVER_VERSION).jar
 SERVER_ZIP := server/dist/barn-server-$(SERVER_VERSION).zip
 
+RTAIL_PROGRAMS := $(RTAIL) $(RTAILD) $(RTAILP)
+RTAIL  := rtail/cabal-dev/rtail
+RTAILD := rtail/cabal-dev/rtailp
+RTAILP := rtail/cabal-dev/rtaild
+
 LOG_GEN := test/svlogd-log-generator/loggen
 
 DAHOOP_BASE := hadoop-0.20.2-cdh3u5
 DAHOOP_HOME := test/$(DAHOOP_BASE)
 DAHOOP_URL  := http://archive.cloudera.com/cdh/3/$(DAHOOP_BASE).tar.gz
 
-all : deps $(AGENT_DEB) $(SERVER_ZIP)
+all : deps $(AGENT_DEB) $(SERVER_ZIP) $(RTAIL_PROGRAMS)
 
-deps : fpm $(LOG_GEN) $(DAHOOP_HOME)
+deps : fpm cabal-dev $(LOG_GEN) $(DAHOOP_HOME)
 
 test : start-hadoop
 	(cd server; sbt test)
@@ -48,8 +53,23 @@ $(AGENT_DEB) :
 $(SERVER_ZIP) :
 	(cd server; sbt package-dist)
 
+$(RTAIL) :
+	(cd rtail; cabal-dev install)
+
+$(RTAILD) :
+	(cd rtail; cabal-dev install)
+
+$(RTAILP) :
+	(cd rtail; cabal-dev install)
+
 fpm :
 	gem list | grep ^fpm || gem install fpm
+
+cabal-dev: cabal
+	cabal-dev --numeric-version || cabal install cabal-dev
+
+cabal:
+	cabal --numeric-version
 
 $(LOG_GEN) :
 	(cd test/svlogd-log-generator; g++ -o loggen *.cpp)
