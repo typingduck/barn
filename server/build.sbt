@@ -29,3 +29,11 @@ libraryDependencies := Seq(
 PackageDist.newSettings
 
 GitProject.gitSettings
+
+// unfortunately, the below don't prevent including those jars in the
+// package-dist
+publishArtifact in Test := false
+
+publishArtifact in (Compile, packageDoc) := false
+
+publishArtifact in (Compile, packageSrc) := false

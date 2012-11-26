@@ -1,7 +1,3 @@
 *.swp
 *.deb
 .rvmrc
-test/*.tar.gz
-test/hadoop-*
-build
-server/dist
