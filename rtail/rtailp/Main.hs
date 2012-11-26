@@ -11,13 +11,13 @@ import qualified System.ZMQ3           as Z
 
 main :: IO ()
 main = do
-    topic <- getArgs >>= opts
+    (rtaild,topic) <- getArgs >>= opts
 
     hSetBuffering stdin LineBuffering
 
     Z.withContext 1 $ \c ->
         Z.withSocket c Z.Pub $ \s -> do
-            Z.connect s "ipc:///tmp/rtaild"
+            Z.connect s $ "ipc://" ++ rtaild
 
             forever $ do
                 l <- BS.getLine
@@ -25,8 +25,8 @@ main = do
                 BS.hPut stdout l >> BS.hPut stdout nl
 
     where
-        opts (x:_) = return . BC.pack $ x
-        opts _     = getProgName >>= \p -> ioError $ userError $
-                     "Usage: " ++ p ++ " <topic>"
+        opts (x:y:_) = return (x, BC.pack y)
+        opts _       = getProgName >>= \p -> ioError $ userError $
+                       "Usage: " ++ p ++ " /path/to/rtaild.sock <topic>"
 
         nl = BS.pack [0x0A]

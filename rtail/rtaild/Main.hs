@@ -11,12 +11,12 @@ import qualified System.ZMQ3           as Z
 
 main :: IO ()
 main = do
-    port <- getArgs >>= opts
+    (local,port) <- getArgs >>= opts
 
     Z.withContext 1 $ \c ->
         Z.withSocket c Z.Sub $ \sub ->
         Z.withSocket c Z.Pub $ \pub -> do
-            Z.bind sub "ipc:///tmp/rtaild"
+            Z.bind sub $ "ipc://" ++ local
             Z.bind pub $ "tcp://*:" ++ port
 
             Z.subscribe sub ""
@@ -24,6 +24,6 @@ main = do
             forever $ Z.receiveMulti sub >>= Z.sendMulti pub
 
     where
-        opts (x:_) = return x
-        opts _     = getProgName >>= \p -> ioError $ userError $
-                     "Usage: " ++ p ++ " <port>"
+        opts (x:y:_) = return (x, y)
+        opts _       = getProgName >>= \p -> ioError $ userError $
+                       "Usage: " ++ p ++ " /path/to/rtaild.sock <port>"

@@ -8,6 +8,7 @@
 RSYNC_HOST="collector.acme.org:1025"
 SERVICE_NAME="webscaler"
 RTAIL_PORT=12345
+RTAILD_SOCK="/tmp/rtaild.$$"
 
 function close {
   pkill -TERM -P $$
@@ -16,7 +17,7 @@ function close {
 
 trap close SIGTERM
 
-rtaild $RTAIL_PORT &
+rtaild $RTAILD_SOCK $RTAIL_PORT &
 
 function logpipe {
   bucket=$1
@@ -25,9 +26,9 @@ function logpipe {
   barn-agent $RSYNC_HOST ./$bucket $SERVICE_NAME $bucket &
 
   if [[ "$pattern" == "" ]]; then
-    rtailp $bucket | svlogd -tt ./$bucket
+    rtailp $RTAILD_SOCK $bucket | svlogd -tt ./$bucket
   else
-    rtailp $bucket | grep "$pattern" | svlogd -tt ./$bucket
+    rtailp $RTAILD_SOCK $bucket | grep "$pattern" | svlogd -tt ./$bucket
   fi
 }
 
