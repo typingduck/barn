@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# This is an example of how to set up runit's log/run script with barn.
+#
+# It shows how to split the log stream into several "topic" streams, manage
+# barn-agent processes, and add remote tailing.
+
+RSYNC_HOST="collector.acme.org:1025"
+SERVICE_NAME="webscaler"
+RTAIL_PORT=12345
+RTAILD_SOCK="/tmp/rtaild.$$"
+
+function close {
+  pkill -TERM -P $$
+  exit 0
+}
+
+trap close SIGTERM
+
+rtaild $RTAILD_SOCK $RTAIL_PORT &
+
+function logpipe {
+  bucket=$1
+  pattern=$2
+
+  barn-agent $RSYNC_HOST ./$bucket $SERVICE_NAME $bucket &
+
+  if [[ "$pattern" == "" ]]; then
+    rtailp $RTAILD_SOCK $bucket | svlogd -tt ./$bucket
+  else
+    rtailp $RTAILD_SOCK $bucket | grep "$pattern" | svlogd -tt ./$bucket
+  fi
+}
+
+tee >( logpipe main ) \
+    >( logpipe cat1 'INFO\[origin.*x-category=\"cat1\".*\]' ) \
+    >( logpipe cat2 'INFO\[origin.*x-category=\"cat2\".*\]' ) \
+    >( logpipe cat3 'INFO\[origin.*x-category=\"cat3\".*\]' ) \
+    > /dev/null
+
+wait
