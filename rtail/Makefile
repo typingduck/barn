@@ -1,9 +1,10 @@
 .PHONY: build clean clean-all dist
 
 VERSION   := $(shell cat rtail.cabal | sed -n -E -e 's/^version[[:space:]]*:[[:space:]]*([0-9.]+)/\1/p')
+OSARCH		:= $(shell uname -sm | tr ' ' -)
 CABAL_DEV := ~/.cabal/bin/cabal-dev
 PROGRAMS  := cabal-dev/bin/*
-TARBALL		:= dist/rtail-$(VERSION).tar.gz
+TARBALL		:= dist/rtail-$(VERSION)_$(OSARCH).tar.gz
 
 LIBZMQ   := libzmq
 ZMQ_BASE := zeromq-3.2.2
