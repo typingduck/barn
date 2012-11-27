@@ -27,7 +27,9 @@ clean :
 
 start-hadoop : $(DAHOOP_BASE)
 	@echo "Starting Dahoops..."
-	(cd $(DAHOOP_BASE); ./bin/hadoop namenode -force -format; ./bin/start-all.sh)
+	(cd $(DAHOOP_BASE); \
+	 echo "Y" | ./bin/hadoop namenode -format; \
+	 ./bin/start-all.sh)
 
 stop-hadoop : $(DAHOOP_BASE)
 	@echo "Stopping Dahoops..."
