@@ -1,17 +1,17 @@
 package barn
 
-object Logging {
-  private val (logger, formatter) = ZeroLoggerFactory.newLogger(this)
-}
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.DateTime
 
 trait Logging {
 
-  import Logging.logger
-  import Logging.formatter._
+  val formatter = DateTimeFormat.forPattern("YYYY-MM-dd_HH:mm:ss.SSSSS")
 
-  def info(s: String) = logger.info(s)
-  def warn(s: String) = logger.warning(s)
-  def error(s: String) = logger.severe(s)
+  def now : String = formatter.print(DateTime.now)
+
+  def info(s: String) = println(now + "  INFO " + s)
+  def warn(s: String) = println(now + "  WARN " + s)
+  def error(s: String) = println(now + " ERROR " + s)
 
   def logBarnError(s: BarnError) = error(s.toString)
 
