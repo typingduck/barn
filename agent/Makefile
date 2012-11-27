@@ -1,9 +1,11 @@
-.PHONY: all clean fpm
+.PHONY: dist clean fpm
 
 VERSION := 0.5.0
 DEB := barn-agent_$(VERSION)_all.deb
 
-all	: fpm $(DEB)
+default : dist
+
+dist : $(DEB)
 
 clean :
 	rm -r build
@@ -11,6 +13,7 @@ clean :
 
 $(DEB) :
 	@echo "Building agent .deb..."
+	@make fpm
 	mkdir -p build/usr/local/bin/
 	cp barn-agent build/usr/local/bin
 	fpm -C build \
