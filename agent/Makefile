@@ -1,9 +1,11 @@
-.PHONY: dist clean fpm
+.PHONY: build dist clean fpm
 
 VERSION := 0.5.0
 DEB := barn-agent_$(VERSION)_all.deb
 
 default : dist
+
+build : default
 
 dist : $(DEB)
 
