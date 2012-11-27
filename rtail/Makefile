@@ -1,22 +1,51 @@
-.PHONY: all cabal cabal-dev clean deps
+.PHONY: build clean clean-all dist
 
-all : deps cabal-dev/bin/*
+VERSION   := $(shell cat rtail.cabal | sed -n -E -e 's/^version[[:space:]]*:[[:space:]]*([0-9.]+)/\1/p')
+CABAL_DEV := ~/.cabal/bin/cabal-dev
+PROGRAMS  := cabal-dev/bin/*
+TARBALL		:= dist/rtail-$(VERSION).tar.gz
+
+LIBZMQ   := libzmq
+ZMQ_BASE := zeromq-3.2.2
+ZMQ_TAR  := $(ZMQ_BASE).tar.gz
+ZMQ_URL  := http://download.zeromq.org/$(ZMQ_TAR)
+
+default : build
+
+build : $(CABAL_DEV) $(LIBZMQ) $(PROGRAMS)
 
 clean :
 	rm -r cabal-dev
 	rm -r dist
 
-deps : cabal-dev
+clean-all : clean
+	rm -r $(ZMQ_BASE)
+	rm $(ZMQ_TAR)
+	rm -r $(LIBZMQ)
 
-cabal-dev/bin/* : *.hs
-	cabal-dev install
+dist : build $(TARBALL)
 
-cabal-dev: cabal
+$(TARBALL) :
+	(cd cabal-dev/bin; tar -czf ../../$(TARBALL) rtail*)
+
+$(PROGRAMS) : *.hs
+	$(CABAL_DEV) install \
+		--extra-lib-dirs=`pwd`/$(LIBZMQ)/lib \
+		--extra-include-dirs=`pwd`/$(LIBZMQ)/include
+
+$(CABAL_DEV) :
 	@echo "Checking for cabal-dev..."
-	@(cabal-dev --numeric-version > /dev/null || cabal install cabal-dev)
+	@($(CABAL_DEV) --numeric-version > /dev/null || cabal install cabal-dev)
 
-cabal:
-	@echo "Checking for cabal..."
-	@(cabal --numeric-version > /dev/null || \
-		(echo "`cabal` not found. do you have the haskell platform installed?"; \
-		 exit 1))
+$(LIBZMQ) : $(ZMQ_BASE)
+	(cd $(ZMQ_BASE); \
+		make clean; \
+		./configure --prefix=`pwd`/../$(LIBZMQ) && \
+		make && make install; \
+		exit 0)
+
+$(ZMQ_BASE) : $(ZMQ_TAR)
+	tar xvfz $(ZMQ_TAR)
+
+$(ZMQ_TAR) :
+	curl $(ZMQ_URL) > $(ZMQ_TAR)
