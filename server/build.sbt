@@ -28,6 +28,7 @@ libraryDependencies := Seq(
 , "org.scalaz"        %% "scalaz-core"  % "6.0.4"
 , "org.scalatest"     %% "scalatest"    % "1.6.1"  % "test,slow"
 , "org.scalacheck"    %% "scalacheck"   % "1.10.0" % "test,slow"
+, "com.github.scopt"  %% "scopt"        % "2.1.0"
 )
 
 
