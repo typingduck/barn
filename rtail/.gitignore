@@ -3,3 +3,5 @@
 *.a
 cabal-dev
 dist
+libzmq
+zeromq-*

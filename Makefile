@@ -1,8 +1,10 @@
-.PHONY: all clean
+.PHONY: build clean
 
 COMPONENTS := agent rtail server testing
 
-all :
+default : build
+
+build :
 	for c in $(COMPONENTS); do (cd $$c; make); done
 
 clean :
