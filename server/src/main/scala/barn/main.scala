@@ -5,6 +5,8 @@ import scalaz._
 import Scalaz._
 import placement._
 
+import org.apache.hadoop.conf.{Configuration => HadoopConf}
+
 object BarnHdfsWriter
   extends App
   with Logging
@@ -12,66 +14,59 @@ object BarnHdfsWriter
   with SvlogdFile
   with FileCombiner
   with HdfsPlacementStrategy
-  with LocalPlacementStrategy {
+  with LocalPlacementStrategy
+  with ParamParser {
 
-  val (conf, rootLogDir, baseHdfsDir) = loadConf(args)
+  loadConf(args) { case (hadoopConf, rootLogDir, rootHdfsDir) =>
 
-  val localTempDir = new Dir("/tmp")
-  val excludeLocal = List("\\..*")
+    val localTempDir = new Dir("/tmp")
+    val excludeLocal = List("\\..*")
 
-  val (shipInterval, retention) = (10, 60) //in seconds
-  val minMB = 10 //minimum megabytes to keep for each service!
+    val (shipInterval, retention) = (10, 60) //in seconds
+    val minMB = 10 //minimum megabytes to keep for each service!
 
-  continually(() => listSubdirectories(rootLogDir)).iterator foreach {
-    _().toOption.fold( _ foreach { serviceDir =>
+    continually(() => listSubdirectories(rootLogDir)).iterator foreach {
+      _().toOption.fold( _ foreach { serviceDir =>
 
-      info("Checking service " + serviceDir + " to sync.")
+        info("Checking service " + serviceDir + " to sync.")
 
-      Thread.sleep(1000) //Replace me with iNotify and concurrent shippings
+        Thread.sleep(1000) //Replace me with iNotify and concurrent shippings
 
-      val result = for {
-        serviceInfo <- decodeServiceInfo(serviceDir)
+        val result = for {
+          serviceInfo <- decodeServiceInfo(serviceDir)
 
-        fs          <- createFileSystem(conf)
-        plan        <- planNextShip(fs
-                                  , serviceInfo
-                                  , baseHdfsDir
-                                  , shipInterval)
+          fs          <- createFileSystem(hadoopConf)
+          plan        <- planNextShip(fs
+                                    , serviceInfo
+                                    , rootHdfsDir
+                                    , shipInterval)
 
-        localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
-        candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
-        concatted   <- concatCandidates(candidates, localTempDir)
+          localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
+          candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
+          concatted   <- concatCandidates(candidates, localTempDir)
 
-        lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
-        targetName_  = targetName(lastTaistamp, serviceInfo)
-        _           <- atomicShipToHdfs(fs
-                                      , concatted
-                                      , plan hdfsDir
-                                      , targetName_
-                                      , plan hdfsTempDir)
+          lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
+          targetName_  = targetName(lastTaistamp, serviceInfo)
+          _           <- atomicShipToHdfs(fs
+                                        , concatted
+                                        , plan hdfsDir
+                                        , targetName_
+                                        , plan hdfsTempDir)
 
-        shippedTS   <- svlogdFileTimestamp(candidates head)
+          shippedTS   <- svlogdFileTimestamp(candidates head)
 
-        _           <- cleanupLocal(serviceDir
-                                       , retention
-                                       , shippedTS
-                                       , minMB
-                                       , excludeLocal)
+          _           <- cleanupLocal(serviceDir
+                                         , retention
+                                         , shippedTS
+                                         , minMB
+                                         , excludeLocal)
 
-      } yield ()
+        } yield ()
 
-      result ||| logBarnError
+        result ||| logBarnError
 
-    }, logBarnError _)
-  }
-
-  import org.apache.hadoop.conf.Configuration
-
-  def loadConf(args: Array[String]) : (Configuration, Dir, HdfsDir) = {
-    val (remainingArgs, conf) = parseHadoopConf(args)
-    val rootLogDir = new Dir(remainingArgs(0))
-    val rootHdfsDir = new HdfsDir(remainingArgs(1))
-    (conf, rootLogDir, rootHdfsDir)
+      }, logBarnError _)
+    }
   }
 
   def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String])
