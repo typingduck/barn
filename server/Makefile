@@ -1,4 +1,4 @@
-.PHONY: build clean dist test start-hadoop stop-hadoop
+.PHONY: build clean dist test test-thorough start-hadoop stop-hadoop
 
 VERSION := $(shell cat build.sbt | sed -n -E -e 's/version[[:space:]]+:=[[:space:]]+"([^"]+)"/\1/p')
 PACKAGE_ZIP := dist/barn-server-$(VERSION).zip
@@ -14,8 +14,11 @@ build : $(SRC)
 
 dist : $(PACKAGE_ZIP)
 
-test : start-hadoop
+test :
 	sbt test
+
+test-thorough : start-hadoop
+	sbt test slow:test
 	@make stop-hadoop
 
 clean :
@@ -33,7 +36,7 @@ stop-hadoop : $(DAHOOP_BASE)
 $(PACKAGE_ZIP) : $(SRC)
 	@echo "Building server .zip..."
 	@make start-hadoop
-	sbt clean package-dist
+	sbt clean slow:test package-dist
 	@make stop-hadoop
 
 $(DAHOOP_BASE) :
