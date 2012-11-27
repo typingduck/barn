@@ -24,8 +24,8 @@ main = do
             `finally` mapM_ (Z.unsubscribe s) topics
 
     where
-        opts ys@(x:xs) = do
-            let (as,ts) = partition (elem ':') ys
+        opts xs@(_:_) = do
+            let (as,ts) = partition (elem ':') xs
             if (null as || null ts) then opts [] else return (as,ts)
 
         opts _ = getProgName >>= \p -> ioError $ userError $

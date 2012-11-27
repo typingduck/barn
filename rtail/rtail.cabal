@@ -12,13 +12,17 @@ executable rtaild
   build-depends:     base >= 4.5 && < 5, bytestring, zeromq3-haskell
 
   hs-source-dirs:    rtaild
+  ghc-options:       -Wall -O2 -threaded -rtsopts
 
 executable rtailp
   main-is:           Main.hs
   build-depends:     base >= 4.5 && < 5, bytestring, zeromq3-haskell
 
   hs-source-dirs:    rtailp
+  ghc-options:       -Wall -O2 -threaded -rtsopts
 
 executable rtail
   main-is:           Main.hs
   build-depends:     base >= 4.5 && < 5, bytestring, zeromq3-haskell
+
+  ghc-options:       -Wall -O2 -threaded -rtsopts
