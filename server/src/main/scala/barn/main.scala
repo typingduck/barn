@@ -6,6 +6,7 @@ import Scalaz._
 import placement._
 
 import org.apache.hadoop.conf.{Configuration => HadoopConf}
+import org.joda.time._
 
 object BarnHdfsWriter
   extends App
@@ -15,7 +16,8 @@ object BarnHdfsWriter
   with FileCombiner
   with HdfsPlacementStrategy
   with LocalPlacementStrategy
-  with ParamParser {
+  with ParamParser
+  with TimeUtils {
 
   loadConf(args) { case (hadoopConf, rootLogDir, rootHdfsDir) =>
 
@@ -24,6 +26,7 @@ object BarnHdfsWriter
 
     val (shipInterval, retention) = (10, 60) //in seconds
     val minMB = 10 //minimum megabytes to keep for each service!
+    val defaultLookBackDays = 10
 
     continually(() => listSubdirectories(rootLogDir)).iterator foreach {
       _().toOption.fold( _ foreach { serviceDir =>
@@ -36,12 +39,17 @@ object BarnHdfsWriter
           serviceInfo <- decodeServiceInfo(serviceDir)
 
           fs          <- createFileSystem(hadoopConf)
+
+          localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
+
+          lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
+
           plan        <- planNextShip(fs
                                     , serviceInfo
                                     , rootHdfsDir
-                                    , shipInterval)
+                                    , shipInterval
+                                    , lookBack)
 
-          localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
           candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
           concatted   <- concatCandidates(candidates, localTempDir)
 
@@ -68,6 +76,11 @@ object BarnHdfsWriter
       }, logBarnError _)
     }
   }
+
+  def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)
+  : Validation[BarnError, DateTime]
+   = inceptRight(localFiles.lastOption.map(svlogdFileTimestamp))
+      .map(_ getOrElse DateTime.now.minusDays(defaultLookBackDays))
 
   def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String])
   : Validation[BarnError, List[File]]

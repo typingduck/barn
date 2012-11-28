@@ -9,6 +9,7 @@ import org.scalatest.prop.Checkers
 import org.scalacheck.Prop._
 import org.apache.hadoop.conf.Configuration
 import barn.placement.HdfsPlacementStrategy
+import org.joda.time._
 
 class HdfsPlacementSuite
   extends FunSuite
@@ -35,13 +36,23 @@ class HdfsPlacementSuite
              , genHdfsDirectory()) {
 
           case (serviceInfo, baseDir) =>
-            planNextShip(fs, serviceInfo, baseDir, shippingInterval) match {
+
+            val lookBack = DateTime.now.minusDays(10)
+
+            planNextShip(fs
+                       , serviceInfo
+                       , baseDir
+                       , shippingInterval
+                       , lookBack) match {
+
               case Failure(e) => false :| "Failed to plan to ship with " + e
               case Success(shippingPlan) =>
 
-                val correctPlan = ShippingPlan(targetDirs(baseDir, maxLookBack).head
-                                             , targetTempDir(baseDir)
-                                             , None)
+                val now = DateTime.now
+                val correctPlan =
+                  ShippingPlan(targetDirs(now, baseDir, lookBack).head
+                             , targetTempDir(baseDir)
+                             , None)
 
                 (shippingPlan == correctPlan) :| "Wrong plan deduced. Got:" +
                                                 shippingPlan +
@@ -60,11 +71,12 @@ class HdfsPlacementSuite
 
       forAll(genLocalServiceInfo
            , genHdfsDirectory()
-           , genDateBeforeNow(maxLookBack)) {
+           , genDateBeforeNow(40)) {
 
         case (serviceInfo, baseDir, lastShippedDate) =>
 
-          val targetDir = targetDirs(baseDir, maxLookBack).head
+          val now = DateTime.now
+          val targetDir = targetDirs(now, baseDir, lastShippedDate).head
           val lastTaistamp = Tai64.convertDateToTai64(lastShippedDate)
 
           val lastShippedFile =
@@ -77,7 +89,12 @@ class HdfsPlacementSuite
                                        , Some(lastTaistamp))
 
 
-          planNextShip(fs, serviceInfo, baseDir, shippingInterval) match {
+          planNextShip(fs
+                     , serviceInfo
+                     , baseDir
+                     , shippingInterval
+                     , lastShippedDate.minusDays(1)) match {
+
             case Failure(e) => false :| "Failed to plan to ship with " + e
             case Success(shippingPlan) =>
 
@@ -97,7 +114,7 @@ class HdfsPlacementSuite
 
       forAll(genLocalServiceInfo
            , genHdfsDirectory()
-           , genDateBeforeNow(maxLookBack)
+           , genDateBeforeNow(40)
            , genShippingInterval) {
 
         case (serviceInfo
@@ -105,7 +122,8 @@ class HdfsPlacementSuite
             , lastShippedDate
             , shippingInterval) =>
 
-          val targetDir = targetDirs(baseDir, maxLookBack).head
+          val now = DateTime.now
+          val targetDir = targetDirs(now, baseDir, lastShippedDate).head
           val lastTaistamp = Tai64.convertDateToTai64(lastShippedDate)
           val targetName_ = targetName(lastTaistamp, serviceInfo)
           val lastShippedFile = new HdfsFile(targetDir, targetName_)
@@ -113,7 +131,11 @@ class HdfsPlacementSuite
 
           fs.create(lastShippedFile).close
 
-          planNextShip(fs, serviceInfo, baseDir, shippingInterval) match {
+          planNextShip(fs
+                     , serviceInfo
+                     , baseDir
+                     , shippingInterval
+                     , lastShippedDate.minusDays(1)) match {
             case Failure(SyncThrottled(_)) =>
               shouldThrottle :| "Sync throttled though it shouldn't have been"
             case Failure(e) => false :| "Failed to plan to ship with " + e

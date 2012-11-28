@@ -10,4 +10,6 @@ trait TimeUtils {
   : Boolean = !(new Interval(base, DateTime.now(DateTimeZone.UTC))
     .toDuration.toStandardSeconds isLessThan Seconds.seconds(enoughSeconds))
 
+  def daysAgo(days: Int) : DateTime = DateTime.now.minusDays(days)
+
 }
