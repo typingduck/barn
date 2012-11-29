@@ -1,7 +1,3 @@
 #!/bin/bash
 
-if [[ -z "$CLASSPATH" ]]; then
-  echo -e "WARN: Did you set CLASSPATH properly?\n";
-fi
-
-java barn.BarnHdfsWriter "$@"
+java -jar `dirname "$0"`/../barn-server_?????????.jar "$@"
