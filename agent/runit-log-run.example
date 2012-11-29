@@ -7,11 +7,13 @@
 
 RSYNC_HOST="collector.acme.org:1025"
 SERVICE_NAME="webscaler"
+HOST_NAME=$(hostname)
 RTAIL_PORT=12345
 RTAILD_SOCK="/tmp/rtaild.$$"
 
 function close {
   pkill -TERM -P $$
+  rm $RTAILD_SOCK
   exit 0
 }
 
@@ -22,13 +24,15 @@ rtaild $RTAILD_SOCK $RTAIL_PORT &
 function logpipe {
   bucket=$1
   pattern=$2
+  topic="$SERVICE_NAME.$bucket.$HOST_NAME"
 
+  mkdir -p ./$bucket
   barn-agent $RSYNC_HOST ./$bucket $SERVICE_NAME $bucket &
 
   if [[ "$pattern" == "" ]]; then
-    rtailp $RTAILD_SOCK $bucket | svlogd -tt ./$bucket
+    rtailp $RTAILD_SOCK $topic | svlogd -tt ./$bucket
   else
-    rtailp $RTAILD_SOCK $bucket | grep "$pattern" | svlogd -tt ./$bucket
+    rtailp $RTAILD_SOCK $topic | grep "$pattern" | svlogd -tt ./$bucket
   fi
 }
 
