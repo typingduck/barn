@@ -26,7 +26,7 @@ from the `runit` package. A separate agent watches `svlogd`s output directory,
 and, upon log file rotation, attempts to ship non-current log files to a remote
 server.
 
-```
+```shell
 # example snippet of a runit 'log/run' script
 
 barn-agent farm.acme.org:1025 ./main my-service main &
@@ -37,7 +37,7 @@ It is also trivial to intercept the standard output stream using a simple UNIX
 pipe and, for example, split it into multiple topic streams, each handled by a
 separate `svlogd`:
 
-```
+```shell
 # (setup barn-agent ...)
 
 # capture stdout and split into two streams
@@ -51,7 +51,7 @@ certain amount of data has been written, until it gets shipped to remote
 storage. To get real-time access to the stream, we need to insert `rtail` into
 the pipe:
 
-```
+```shell
 # (setup barn-agent ...)
 
 RTAILD_SOCK=./rtaild.sock
@@ -67,7 +67,7 @@ tee >( grep "^ERROR" | rtailp $RTAILD_SOCK myservice.errors.$(hostname) | svlogd
 We can now use the `rtail` program to connect to a set of machines, and
 subscribe to (a subset of) the log streams produced by services running there:
 
-```
+```shell
 HOSTS="host1:12345 host2:12345 host3:12345"
 # subscribe to all streams of 'myservice' on three machines:
 rtail $HOSTS myservice
@@ -171,7 +171,7 @@ Make sure you have the following installed on the build system:
 
 Then, in the top level of the repository, simply type:
 
-```
+```shell
 make dist
 ```
 
