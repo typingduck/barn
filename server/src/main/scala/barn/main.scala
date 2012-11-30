@@ -20,16 +20,29 @@ object BarnHdfsWriter
   with TimeUtils {
 
   loadConf(args) { case (hadoopConf, rootLogDir, rootHdfsDir) =>
-
-    val localTempDir = new Dir("/tmp")
-    val excludeLocal = List("\\..*")
-
-    val (shipInterval, retention) = (10, 60) //in seconds
-    val minMB = 10 //minimum megabytes to keep for each service!
-    val defaultLookBackDays = 10
-
     continually(() => listSubdirectories(rootLogDir)).iterator foreach {
-      _().toOption.fold( _ foreach { serviceDir =>
+      _().fold(logBarnError
+             , syncRootLogDir(hadoopConf
+                            , rootLogDir
+                            , rootHdfsDir))
+    }
+  }
+
+  val localTempDir = new Dir("/tmp")
+  val excludeLocal = List("\\..*")
+
+  val (shipInterval, retention) = (10, 60) //in seconds
+  val minMB = 10 //minimum megabytes to keep for each service!
+  val defaultLookBackDays = 10
+
+  def syncRootLogDir
+    (hadoopConf: HadoopConf, rootLogDir: Dir, rootHdfsDir: HdfsDir)
+    (dirs: List[Dir]) : Unit = dirs match {
+    case Nil =>
+      info("No service has appeared in root log dir. Incorporating patience.")
+      Thread.sleep(1000)
+    case xs =>
+      xs foreach { serviceDir =>
 
         info("Checking service " + serviceDir + " to sync.")
 
@@ -72,9 +85,7 @@ object BarnHdfsWriter
         } yield ()
 
         result ||| logBarnError
-
-      }, logBarnError _)
-    }
+      }
   }
 
   def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)
