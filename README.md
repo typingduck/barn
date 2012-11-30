@@ -242,23 +242,24 @@ short TTL and perform manual failover.
 * **Why is rtail written in Haskell?! I thought that's for academic curmudgeons
   who wear no shoes, even in winter!**
 
-  Well, we _are_ academic curmudgeons, only that we do wear shoes.
+  We _are_ curmudgeons, appreciate academia (from a safe distance), and we wear
+  shoes (most of the time).
 
   There's also a C++ implementation (see the rtail++ branch), but it needs some
   love: rtailp currently consumes way too much CPU.
 
 * **Why is rtail not written in Go?! I hear it's webscale!**
 
-  Yeah sure. We'll consider it when the implementation reaches version 2.0, and
+  Yeah sure. We'll consider it when it's implementation reaches version 2.0, and
   someone writes a proper 0mq binding.
 
 
 ## Maintainers
 
-  * Omid Aladini
-  * Kim Altintop
+  * Omid Aladini <omid@soundcloud.com>
+  * Kim Altintop <kim@soundcloud.com>
 
 ## Contributors
 
-  * Brendan Hay
-  * Torsten Curdt
+  * Brendan Hay <brendan@soundcloud.com>
+  * Torsten Curdt <tcurdt@soundcloud.com>
