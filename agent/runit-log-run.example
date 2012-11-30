@@ -32,7 +32,7 @@ function logpipe {
   if [[ "$pattern" == "" ]]; then
     rtailp $RTAILD_SOCK $topic | svlogd -tt ./$bucket
   else
-    rtailp $RTAILD_SOCK $topic | grep "$pattern" | svlogd -tt ./$bucket
+    grep "$pattern" | rtailp $RTAILD_SOCK $topic | svlogd -tt ./$bucket
   fi
 }
 
