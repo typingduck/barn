@@ -1,7 +1,7 @@
 import AssemblyKeys._
 import com.twitter.sbt._
 
-name := "barn-server"
+name := "barn-baler"
 
 version := "0.1.1"
 

@@ -15,7 +15,7 @@ trait ParamParser
                     , rootHdfsDir : String
                     , hdfsEndpoint : String)
 
-  val parser = new OptionParser[BarnConf]("barn-server") {
+  val parser = new OptionParser[BarnConf]("barn-baler") {
     def options = Seq(
       opt("l", "root-log-dir", "<dir>", "directory containing the local logs.")
           {(v: String, c: BarnConf) => c.copy(rootLogDir = v)},

@@ -1,7 +1,7 @@
 .PHONY: build clean dist test test-thorough start-hadoop stop-hadoop
 
 VERSION := $(shell cat build.sbt | sed -n -E -e 's/version[[:space:]]+:=[[:space:]]+"([^"]+)"/\1/p')
-PACKAGE_ZIP := dist/barn-server-$(VERSION).zip
+PACKAGE_ZIP := dist/barn-baler-$(VERSION).zip
 SRC := src/main/scala/**/*.scala
 
 DAHOOP_BASE := hadoop-0.20.2-cdh3u5
@@ -36,7 +36,7 @@ stop-hadoop : $(DAHOOP_BASE)
 	(cd $(DAHOOP_BASE); ./bin/stop-all.sh)
 
 $(PACKAGE_ZIP) : $(SRC)
-	@echo "Building server .zip..."
+	@echo "Building barn-baler .zip..."
 	@make start-hadoop
 	sbt clean slow:test package-dist
 	@make stop-hadoop
