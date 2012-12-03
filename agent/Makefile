@@ -1,6 +1,6 @@
 .PHONY: build dist clean fpm
 
-VERSION := 0.5.0
+VERSION := 0.5.1
 DEB := barn-agent_$(VERSION)_all.deb
 
 default : dist
@@ -17,7 +17,7 @@ $(DEB) :
 	@echo "Building agent .deb..."
 	@make fpm
 	mkdir -p build/usr/local/bin/
-	cp barn-agent build/usr/local/bin
+	cp barn-* build/usr/local/bin
 	fpm -C build \
 			-s dir -t deb \
 			-v $(VERSION) \
@@ -26,7 +26,10 @@ $(DEB) :
 			-d bash \
 			-d rsync \
 			-d inotify-tools \
-			./usr/local/bin/barn-agent
+			./usr/local/bin/barn-agent \
+			./usr/local/bin/barn-master \
+			./usr/local/bin/barn-replicate \
+			./usr/local/bin/barn-slave
 
 fpm :
 	@echo "Checking for fpm gem..."
