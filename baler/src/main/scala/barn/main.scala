@@ -19,12 +19,10 @@ object BarnHdfsWriter
   with ParamParser
   with TimeUtils {
 
-  loadConf(args) { case (hadoopConf, rootLogDir, rootHdfsDir) =>
-    continually(() => listSubdirectories(rootLogDir)).iterator foreach {
+  loadConf(args) { case (hadoopConf, localLogDir, hdfsLogDir) =>
+    continually(() => listSubdirectories(localLogDir)).iterator foreach {
       _().fold(logBarnError
-             , syncRootLogDir(hadoopConf
-                            , rootLogDir
-                            , rootHdfsDir))
+             , syncRootLogDir(hadoopConf, hdfsLogDir))
     }
   }
 
@@ -36,7 +34,7 @@ object BarnHdfsWriter
   val defaultLookBackDays = 10
 
   def syncRootLogDir
-    (hadoopConf: HadoopConf, rootLogDir: Dir, rootHdfsDir: HdfsDir)
+    (hadoopConf: HadoopConf, hdfsLogDir: HdfsDir)
     (dirs: List[Dir]) : Unit = dirs match {
     case Nil =>
       info("No service has appeared in root log dir. Incorporating patience.")
@@ -59,7 +57,7 @@ object BarnHdfsWriter
 
           plan        <- planNextShip(fs
                                     , serviceInfo
-                                    , rootHdfsDir
+                                    , hdfsLogDir
                                     , shipInterval
                                     , lookBack)
 

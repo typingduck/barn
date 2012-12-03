@@ -11,16 +11,16 @@ object ParamParser extends ParamParser
 trait ParamParser
   extends Logging {
 
-  case class BarnConf(rootLogDir : String
-                    , rootHdfsDir : String
+  case class BarnConf(localLogDir : String
+                    , hdfsLogDir : String
                     , hdfsEndpoint : String)
 
   val parser = new OptionParser[BarnConf]("barn-baler") {
     def options = Seq(
-      opt("l", "root-log-dir", "<dir>", "directory containing the local logs.")
-          {(v: String, c: BarnConf) => c.copy(rootLogDir = v)},
-      opt("h", "root-hdfs-dir", "<dir>", "directory containing shipped logs.")
-          {(v: String, c: BarnConf) => c.copy(rootHdfsDir = v)},
+      opt("l", "local-log-dir", "<dir>", "directory containing the local logs.")
+          {(v: String, c: BarnConf) => c.copy(localLogDir = v)},
+      opt("h", "hdfs-log-dir", "<dir>", "directory containing shipped logs.")
+          {(v: String, c: BarnConf) => c.copy(hdfsLogDir = v)},
       opt("s", "hdfs", "<hdfs://host:port>", "hdfs endpoint")
           {(v: String, c: BarnConf) => c.copy(hdfsEndpoint = v)}
     )
@@ -32,8 +32,8 @@ trait ParamParser
 
     parser.parse(args, BarnConf(null,null,null)) map { config =>
 
-      if(config.rootLogDir == null ||
-         config.rootHdfsDir == null ||
+      if(config.localLogDir == null ||
+         config.hdfsLogDir == null ||
          config.hdfsEndpoint == null) {
 
         parser.showUsage
@@ -41,10 +41,10 @@ trait ParamParser
 
         val hdfsEndpoint = tap(new HadoopConf()){_.set("fs.default.name"
                                                           , config.hdfsEndpoint)}
-        val rootLogDir = new Dir(config.rootLogDir)
-        val rootHdfsDir = new HdfsDir(config.rootHdfsDir)
+        val localLogDir = new Dir(config.localLogDir)
+        val hdfsLogDir = new HdfsDir(config.hdfsLogDir)
 
-        body(hdfsEndpoint, rootLogDir, rootHdfsDir)
+        body(hdfsEndpoint, localLogDir, hdfsLogDir)
       }
     } getOrElse { false }
   }
