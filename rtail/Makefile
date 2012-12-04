@@ -40,9 +40,9 @@ $(CABAL_DEV) :
 
 $(LIBZMQ) : $(ZMQ_BASE)
 	(cd $(ZMQ_BASE); \
-		make clean; \
+		$(MAKE) clean; \
 		./configure --prefix=`pwd`/../$(LIBZMQ) && \
-		make && make install; \
+		$(MAKE) && $(MAKE) install; \
 		exit 0)
 
 $(ZMQ_BASE) : $(ZMQ_TAR)

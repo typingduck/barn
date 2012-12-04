@@ -19,7 +19,7 @@ test :
 
 test-thorough : start-hadoop
 	sbt test slow:test
-	@make stop-hadoop
+	$(MAKE) stop-hadoop
 
 clean :
 	rm -r dist
@@ -37,12 +37,12 @@ stop-hadoop : $(DAHOOP_BASE)
 
 $(PACKAGE_ZIP) : $(SRC)
 	@echo "Building barn-baler .zip..."
-	@make start-hadoop
+	$(MAKE) start-hadoop
 	sbt clean slow:test package-dist
-	@make stop-hadoop
+	$(MAKE) stop-hadoop
 
 $(DAHOOP_BASE) :
-	make $(DAHOOP_BASE).tar.gz
+	$(MAKE) $(DAHOOP_BASE).tar.gz
 	tar xvfz $(DAHOOP_BASE).tar.gz && \
 	cp conf-hadoop-pseudo/*.xml $(DAHOOP_BASE)/conf
 

@@ -15,7 +15,7 @@ clean :
 
 $(DEB) :
 	@echo "Building harvester .deb..."
-	@make fpm
+	$(MAKE) fpm
 	mkdir -p build/usr/local/bin/
 	cp barn-* build/usr/local/bin
 	fpm -C build \
