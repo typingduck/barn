@@ -15,11 +15,12 @@ trait HdfsPlacementStrategy
   with Hadoop
   with SvlogdFile {
 
-  val maxLookBack = 10 //days
-
   case class DateBucket(year: Int,
                         month: Int,
                         day: Int)
+
+  implicit def dateBucket2Date(d: DateBucket) : DateTime
+  = new DateTime(d.year, d.month, d.day, 0, 0)
 
   case class PlacedFileInfo(bucket   : DateBucket
                          , host     : String
@@ -30,11 +31,14 @@ trait HdfsPlacementStrategy
   def planNextShip(fs: HdfsFileSystem
                  , serviceInfo: LocalServiceInfo
                  , baseHdfsDir: HdfsDir
-                 , shipInterval: Int)
+                 , shipInterval: Int
+                 , lookBackLowerBound: DateTime)
   : Validation[BarnError, ShippingPlan] = {
 
     val hdfsTempDir = targetTempDir(baseHdfsDir)
-    val hdfsDirStream = targetDirs(baseHdfsDir, maxLookBack)
+    val hdfsDirStream = targetDirs(DateTime.now
+                                 , baseHdfsDir
+                                 , lookBackLowerBound)
     val hdfsDir = hdfsDirStream.head
 
     for {
@@ -88,17 +92,18 @@ trait HdfsPlacementStrategy
     new HdfsDir(baseHdfsDir, pattern.format(db.year, db.month, db.day))
   }
 
-  def dateBucket(daysBefore : Int = 0) : DateBucket = {
-    val date = DateTime.now.minusDays(daysBefore)
+  def dateBucket(base: DateTime, daysBefore : Int = 0) : DateBucket = {
+    val date = base.minusDays(daysBefore)
     DateBucket(date.getYear, date.getMonthOfYear, date.getDayOfMonth)
   }
 
-  def dateStream(startingDaysBefore : Int = 0) : Stream[DateBucket] = {
+  def dateStream(base: DateTime, startingDaysBefore: Int = 0)
+  : Stream[DateBucket] = {
 
-    def stream(b: Int) : Stream[DateBucket] =
-      dateBucket(b) #:: stream(b + 1)
+    def stream(base: DateTime, b: Int) : Stream[DateBucket] =
+      dateBucket(base, b) #:: stream(base, b + 1)
 
-    stream(startingDaysBefore)
+    stream(base, startingDaysBefore)
   }
 
   private val hdfsFileMatcher =
@@ -114,9 +119,11 @@ trait HdfsPlacementStrategy
       case _ => InvalidNameFormat("Invalid HdfsFile name format " + hdfsFile) fail
     }, "Invalid HdfsFile name format " + hdfsFile)
 
-  def targetDirs(baseHdfsDir: HdfsDir, maxLookBack: Int)
+  def targetDirs(base: DateTime, baseHdfsDir: HdfsDir, lowerBound: DateTime)
   : Stream[HdfsDir] = {
-    dateStream(0).take(maxLookBack).map(datePath(baseHdfsDir, _))
+    (dateBucket(base, 0) #::
+     dateStream(base, 1).takeWhile(_ isAfter lowerBound.toDateMidnight))
+    .map(datePath(baseHdfsDir, _))
   }
 
   def targetTempDir(baseHdfsDir: HdfsDir)

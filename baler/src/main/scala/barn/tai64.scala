@@ -11,11 +11,11 @@ trait Tai64 {
   val taiBase = 4611686018427387904L
 
   def convertDateToTai64(time: DateTime) : String = {
-    val extraSeconds = conversion_table.reverse.find(_._1.isBefore(time)).map(_._2).getOrElse(0)
+    val extraSeconds = leapSecond(time)
     val leapAdjusted = time.plusSeconds(extraSeconds)
-    val timedelta = new Duration(baseDate, leapAdjusted)
-    val seconds = timedelta.getStandardSeconds
-    val nanoInt = (timedelta.getMillis - timedelta.getStandardSeconds * 1000) * 1000000
+    val timeDelta = new Duration(baseDate, leapAdjusted)
+    val seconds = timeDelta.getStandardSeconds
+    val nanoInt = (timeDelta.getMillis - timeDelta.getStandardSeconds * 1000) * 1000000
     val taiInt = seconds + taiBase
     val intHex = java.lang.Long.toHexString(taiInt)
     val nanoHex = java.lang.Long.toHexString(nanoInt)
@@ -26,13 +26,16 @@ trait Tai64 {
     val taiInt = java.lang.Long.parseLong(hex.substring(0,16), 16)
     val nanoInt = java.lang.Long.parseLong(hex.substring(16, 24), 16)
     val seconds = taiInt - taiBase
-    val timedelta = new Duration(seconds * 1000 + nanoInt / 1000000)
-    val final_ = baseDate.plus(timedelta)
-    val extraSeconds : Int = conversion_table.reverse.find(_._1.isBefore(final_)).map(_._2).getOrElse(0)
+    val timeDelta = new Duration(seconds * 1000 + nanoInt / 1000000)
+    val final_ = baseDate.plus(timeDelta)
+    val extraSeconds = leapSecond(final_)
     final_.plusSeconds(extraSeconds * -1)
   }
 
-  val conversion_table = List[(DateTime, Int)](
+  def leapSecond(t: DateTime) : Int
+  = conversionTable.reverse.find(_._1.isBefore(t)).map(_._2).getOrElse(0)
+
+  val conversionTable = List[(DateTime, Int)](
                       (new DateTime(1972, 01,  1, 0 , 0), 10),
                       (new DateTime(1972, 07,  1, 0 , 0), 11),
                       (new DateTime(1973, 01,  1, 0 , 0), 12),

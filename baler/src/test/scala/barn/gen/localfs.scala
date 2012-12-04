@@ -27,6 +27,6 @@ object LocalFSGenerators extends CommonGenerators {
   val genDirStructureWithFiles = for {
     (base, subs) <- genDirStructure
     files <- genFiles(base)
-  } yield (base, subs, (files -- subs).distinct)
+  } yield (base, subs, (files filterNot (subs contains)).distinct)
 
 }

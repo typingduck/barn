@@ -1,15 +1,24 @@
-.PHONY: all clean test start-hadoop stop-hadoop
+.PHONY: build clean dist test test-thorough start-hadoop stop-hadoop
 
 VERSION := $(shell cat build.sbt | sed -n -E -e 's/version[[:space:]]+:=[[:space:]]+"([^"]+)"/\1/p')
-PACKAGE_ZIP := dist/barn-server-$(VERSION).zip
+PACKAGE_ZIP := dist/barn-baler-$(VERSION).zip
+SRC := src/main/scala/**/*.scala
 
 DAHOOP_BASE := hadoop-0.20.2-cdh3u5
 DAHOOP_URL  := http://archive.cloudera.com/cdh/3/$(DAHOOP_BASE).tar.gz
 
-all : $(PACKAGE_ZIP)
+default : build
 
-test : start-hadoop
+build : $(SRC)
+	sbt compile
+
+dist : $(PACKAGE_ZIP)
+
+test :
 	sbt test
+
+test-thorough : start-hadoop
+	sbt test slow:test
 	@make stop-hadoop
 
 clean :
@@ -18,16 +27,18 @@ clean :
 
 start-hadoop : $(DAHOOP_BASE)
 	@echo "Starting Dahoops..."
-	(cd $(DAHOOP_BASE); ./bin/hadoop namenode -force -format; ./bin/start-all.sh)
+	(cd $(DAHOOP_BASE); \
+	 echo "Y" | ./bin/hadoop namenode -format; \
+	 ./bin/start-all.sh)
 
 stop-hadoop : $(DAHOOP_BASE)
 	@echo "Stopping Dahoops..."
 	(cd $(DAHOOP_BASE); ./bin/stop-all.sh)
 
-$(PACKAGE_ZIP) :
-	@echo "Building server .zip..."
+$(PACKAGE_ZIP) : $(SRC)
+	@echo "Building barn-baler .zip..."
 	@make start-hadoop
-	(cd server; sbt package-dist)
+	sbt clean slow:test package-dist
 	@make stop-hadoop
 
 $(DAHOOP_BASE) :
