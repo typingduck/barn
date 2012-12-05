@@ -23,4 +23,13 @@ port = $RSYNC_PORT
    use chroot = false
 EOL
 
-rsync --verbose --no-detach --daemon --config=$RSYNCD_CONF_NAME
+function close {
+  pkill -TERM -P $$
+  exit 0
+}
+
+trap close SIGTERM
+
+rsync --verbose --no-detach --daemon --config=$RSYNCD_CONF_NAME &
+
+wait
