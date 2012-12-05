@@ -15,12 +15,10 @@ clean :
 
 $(DEB) :
 	@echo "Building harvester .deb..."
+	$(MAKE) fpm
 	mkdir -p build/usr/local/bin/
 	cp barn-* build/usr/local/bin
-	rvm use 1.9.3-p327@barn --create && \
-	bundle install --quiet && \
-	bundle exec fpm \
-			-C build \
+	fpm -C build \
 			-s dir -t deb \
 			-v $(VERSION) \
 			-a all \
@@ -32,3 +30,7 @@ $(DEB) :
 			./usr/local/bin/barn-harvester-master \
 			./usr/local/bin/barn-harvester-replicate \
 			./usr/local/bin/barn-harvester-slave
+
+fpm :
+	@echo "Checking for fpm gem..."
+	@(gem list | grep ^fpm > /dev/null || gem install fpm)
