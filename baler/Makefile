@@ -7,23 +7,26 @@ SRC := src/main/scala/**/*.scala
 DAHOOP_BASE := hadoop-0.20.2-cdh3u5
 DAHOOP_URL  := http://archive.cloudera.com/cdh/3/$(DAHOOP_BASE).tar.gz
 
+SBT 		:= sbt/bin/sbt
+SBT_URL := http://scalasbt.artifactoryonline.com/scalasbt/sbt-native-packages/org/scala-sbt/sbt/0.12.1/sbt.tgz
+
 default : build
 
-build : $(SRC)
-	sbt compile
+build : $(SBT) $(SRC)
+	$(SBT) compile
 
 dist : $(PACKAGE_ZIP)
 
 test :
-	sbt test
+	$(SBT) test
 
 test-thorough : start-hadoop
-	sbt test slow:test
+	$(SBT) test slow:test
 	$(MAKE) stop-hadoop
 
 clean :
 	rm -r dist
-	sbt clean
+	$(SBT) clean
 
 start-hadoop : $(DAHOOP_BASE)
 	@echo "Starting Dahoops..."
@@ -38,7 +41,7 @@ stop-hadoop : $(DAHOOP_BASE)
 $(PACKAGE_ZIP) : $(SRC)
 	@echo "Building barn-baler .zip..."
 	$(MAKE) start-hadoop
-	sbt clean slow:test package-dist
+	$(SBT) clean slow:test package-dist
 	$(MAKE) stop-hadoop
 
 $(DAHOOP_BASE) :
@@ -49,3 +52,8 @@ $(DAHOOP_BASE) :
 
 $(DAHOOP_BASE).tar.gz :
 	curl $(DAHOOP_URL) > $(DAHOOP_BASE).tar.gz
+
+$(SBT) :
+	curl $(SBT_URL) > sbt.tgz && \
+	tar xvfz sbt.tgz && \
+	rm sbt.tgz
