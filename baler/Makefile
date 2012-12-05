@@ -6,6 +6,7 @@ SRC := src/main/scala/**/*.scala
 
 DAHOOP_BASE := hadoop-0.20.2-cdh3u5
 DAHOOP_URL  := http://archive.cloudera.com/cdh/3/$(DAHOOP_BASE).tar.gz
+DAHOOP_DATA := hadoop-data
 
 SBT 		:= sbt/bin/sbt
 SBT_URL := http://scalasbt.artifactoryonline.com/scalasbt/sbt-native-packages/org/scala-sbt/sbt/0.12.1/sbt.tgz
@@ -28,15 +29,18 @@ clean :
 	rm -r dist
 	$(SBT) clean
 
-start-hadoop : $(DAHOOP_BASE)
+start-hadoop : $(DAHOOP_BASE) $(DAHOOP_DATA)
 	@echo "Starting Dahoops..."
 	(cd $(DAHOOP_BASE); \
-	 echo "Y" | ./bin/hadoop namenode -format; \
-	 ./bin/start-all.sh)
+	 ./bin/hadoop namenode& echo $$! > namenode.pid; \
+	 ./bin/hadoop datanode& echo $$! > datanode.pid)
 
 stop-hadoop : $(DAHOOP_BASE)
 	@echo "Stopping Dahoops..."
-	(cd $(DAHOOP_BASE); ./bin/stop-all.sh)
+	(cd $(DAHOOP_BASE); \
+	 kill `cat namenode.pid`; \
+	 kill `cat datanode.pid`; \
+	 rm *.pid)
 
 $(PACKAGE_ZIP) : $(SRC)
 	@echo "Building barn-baler .zip..."
@@ -52,6 +56,10 @@ $(DAHOOP_BASE) :
 
 $(DAHOOP_BASE).tar.gz :
 	curl $(DAHOOP_URL) > $(DAHOOP_BASE).tar.gz
+
+$(DAHOOP_DATA) :
+	mkdir $(DAHOOP_DATA) $(DAHOOP_DATA)/name
+	(cd $(DAHOOP_BASE); echo "Y" | ./bin/hadoop namenode -format)
 
 $(SBT) :
 	curl $(SBT_URL) > sbt.tgz && \
