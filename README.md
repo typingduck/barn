@@ -29,7 +29,7 @@ server.
 ```shell
 # example snippet of a runit 'log/run' script
 
-barn-agent farm.acme.org:1025 ./main my-service main &
+barn-harvester-agent farm.acme.org:1025 ./main my-service main &
 svlogd -tt ./main
 ```
 
@@ -38,7 +38,7 @@ pipe and, for example, split it into multiple topic streams, each handled by a
 separate `svlogd`:
 
 ```shell
-# (setup barn-agent ...)
+# (setup barn-harvester-agent ...)
 
 # capture stdout and split into two streams
 tee >( grep "^ERROR" | svlogd -tt ./errors  ) \
@@ -52,7 +52,7 @@ storage. To get real-time access to the stream, we need to insert `rtail` into
 the pipe:
 
 ```shell
-# (setup barn-agent ...)
+# (setup barn-harvester-agent ...)
 
 RTAILD_SOCK=./rtaild.sock
 RTAILD_PORT=12345
@@ -81,17 +81,18 @@ rtail $HOSTS myservice.main myservice.error.host3
 
 ### Collector
 
-The destination for `barn-agent` doesn't do a lot. In fact, the current
-implementation is just a `rsync` daemon (so `barn-agent` is only little more
-than a clever way to invoke `rsync`). We also provide some script to keep a
-slave `rsync` server in sync (failover of the producers is not automatic).
+The destination for `barn-harvester-agent` doesn't do a lot. In fact, the
+current implementation is just a `rsync` daemon (so `barn-harvester-agent` is
+only little more than a clever way to invoke `rsync`). We also provide some
+script to keep a slave `rsync` server in sync (failover of the producers is not
+automatic).
 
-### Haystacker
+### Barn Baler
 
 The collector node is assumed to be just a single machine, thus with limited
 disk space. So ultimately we want our data to be archived in distributed storage
 -- we use HDFS. Since importing data into HDFS in a reliable, fault-tolerant way
-is a bit of a hairy thing, we provide `haystacker`, which exploits the `Tai64`
+is a bit of a hairy thing, we provide `baler`, which exploits the `Tai64`
 timestamps `svlogd` uses to name rotated logfiles to provide idempotent,
 block-optimizing writes to HDFS.
 
