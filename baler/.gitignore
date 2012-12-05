@@ -4,3 +4,4 @@ target
 tags
 dist
 hadoop-*
+sbt
