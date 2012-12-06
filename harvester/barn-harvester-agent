@@ -34,11 +34,14 @@ function sync {
 
   echo "Checking for $SERVICE_NAME@$CATEGORY"
 
-  RSYNC_COMMAND_LINE="$RSYNC_FLAGS $RSYNC_EXCLUSIONS $RSYNC_SOURCE/* rsync://$BARN_RSYNC_ADDR/barn_logs/$SERVICE_NAME@$CATEGORY@$HOST_NAME/"
-  CANDIDATES=$(eval "rsync --dry-run $RSYNC_COMMAND_LINE" | grep -v "created directory" | grep "@" | awk '{print $1}' | sort)
+  RSYNC_INITIALS="$RSYNC_FLAGS $RSYNC_EXCLUSIONS"
+  RSYNC_TARGET="rsync://$BARN_RSYNC_ADDR/barn_logs/$SERVICE_NAME@$CATEGORY@$HOST_NAME/"
+
+  CANDIDATES=$(eval "rsync --dry-run $RSYNC_INITIALS $RSYNC_SOURCE/* $RSYNC_TARGET" | grep -v "created directory" | grep "@" | awk '{print $1}' | sort)
+
   for c in $CANDIDATES; do
     echo "Candidate on $RSYNC_SOURCE is $c"
-    rsync $RSYNC_COMMAND_LINE
+    rsync $RSYNC_INITIALS $RSYNC_SOURCE/$c $RSYNC_TARGET
   done
 
   if [[ $CANDIDATES == "" ]]; then

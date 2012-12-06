@@ -1,6 +1,6 @@
 .PHONY: build dist clean fpm
 
-VERSION := 0.5.2
+VERSION := 0.5.3
 DEB := barn-harvester_$(VERSION)_all.deb
 
 default : dist
