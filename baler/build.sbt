@@ -59,6 +59,8 @@ fork in Slow := true
 // artifacts
 //
 
+crossPaths := false
+
 // unfortunately, the below don't prevent including those jars in the
 // package-dist
 publishArtifact in Test := false
