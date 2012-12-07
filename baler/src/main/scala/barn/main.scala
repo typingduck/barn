@@ -39,7 +39,7 @@ object BarnHdfsWriter
       info("No service has appeared in root log dir. Incorporating patience.")
       Thread.sleep(1000)
     case xs =>
-      xs foreach { serviceDir =>
+      xs.par map { serviceDir =>
 
         info("Checking service " + serviceDir + " to sync.")
 
