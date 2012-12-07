@@ -27,7 +27,6 @@ object BarnHdfsWriter
   }
 
   val localTempDir = new Dir("/tmp")
-  val excludeLocal = List("\\..*")
 
   val (shipInterval, retention) = (10, 60) //in seconds
   val minMB = 10 //minimum megabytes to keep for each service!
@@ -51,7 +50,7 @@ object BarnHdfsWriter
 
           fs          <- createFileSystem(hadoopConf)
 
-          localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
+          localFiles  <- listSortedLocalFiles(serviceDir)
 
           lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
 
@@ -77,8 +76,7 @@ object BarnHdfsWriter
           _           <- cleanupLocal(serviceDir
                                          , retention
                                          , shippedTS
-                                         , minMB
-                                         , excludeLocal)
+                                         , minMB)
 
         } yield ()
 
