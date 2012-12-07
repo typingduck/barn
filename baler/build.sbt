@@ -3,7 +3,7 @@ import com.twitter.sbt._
 
 name := "barn-baler"
 
-version := "0.1.2"
+version := "0.1.3"
 
 organization := "com.soundcloud"
 
