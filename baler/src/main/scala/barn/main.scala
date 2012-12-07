@@ -19,18 +19,18 @@ object BarnHdfsWriter
   with ParamParser
   with TimeUtils {
 
+  val localTempDir = new Dir("/tmp")
+
+  val (shipInterval, retention) = (10, 60) //in seconds
+  val minMB = 10 //minimum megabytes to keep for each service!
+  val defaultLookBackDays = 10
+
   loadConf(args) { case (hadoopConf, localLogDir, hdfsLogDir) =>
     continually(() => listSubdirectories(localLogDir)).iterator foreach {
       _().fold(logBarnError
              , syncRootLogDir(hadoopConf, hdfsLogDir))
     }
   }
-
-  val localTempDir = new Dir("/tmp")
-
-  val (shipInterval, retention) = (10, 60) //in seconds
-  val minMB = 10 //minimum megabytes to keep for each service!
-  val defaultLookBackDays = 10
 
   def syncRootLogDir
     (hadoopConf: HadoopConf, hdfsLogDir: HdfsDir)
