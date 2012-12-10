@@ -19,19 +19,18 @@ object BarnHdfsWriter
   with ParamParser
   with TimeUtils {
 
+  val localTempDir = new Dir("/tmp")
+
+  val (shipInterval, retention) = (10, 60) //in seconds
+  val minMB = 10 //minimum megabytes to keep for each service!
+  val defaultLookBackDays = 10
+
   loadConf(args) { case (hadoopConf, localLogDir, hdfsLogDir) =>
     continually(() => listSubdirectories(localLogDir)).iterator foreach {
       _().fold(logBarnError
              , syncRootLogDir(hadoopConf, hdfsLogDir))
     }
   }
-
-  val localTempDir = new Dir("/tmp")
-  val excludeLocal = List("\\..*")
-
-  val (shipInterval, retention) = (10, 60) //in seconds
-  val minMB = 10 //minimum megabytes to keep for each service!
-  val defaultLookBackDays = 10
 
   def syncRootLogDir
     (hadoopConf: HadoopConf, hdfsLogDir: HdfsDir)
@@ -40,7 +39,7 @@ object BarnHdfsWriter
       info("No service has appeared in root log dir. Incorporating patience.")
       Thread.sleep(1000)
     case xs =>
-      xs foreach { serviceDir =>
+      xs.par map { serviceDir =>
 
         info("Checking service " + serviceDir + " to sync.")
 
@@ -51,7 +50,7 @@ object BarnHdfsWriter
 
           fs          <- createFileSystem(hadoopConf)
 
-          localFiles  <- listSortedLocalFiles(serviceDir, excludeLocal)
+          localFiles  <- listSortedLocalFiles(serviceDir)
 
           lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
 
@@ -77,8 +76,7 @@ object BarnHdfsWriter
           _           <- cleanupLocal(serviceDir
                                          , retention
                                          , shippedTS
-                                         , minMB
-                                         , excludeLocal)
+                                         , minMB)
 
         } yield ()
 

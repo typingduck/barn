@@ -3,7 +3,7 @@ module Main (main) where
 import Control.Monad      (forever)
 import System.Environment (getArgs, getProgName)
 
-import qualified System.ZMQ3           as Z
+import qualified System.ZMQ3 as Z
 
 
 main :: IO ()

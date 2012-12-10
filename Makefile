@@ -1,14 +1,14 @@
 .PHONY: build clean dist
 
-COMPONENTS := agent rtail server testing
+COMPONENTS := baler rtail harvester testing
 
 default : build
 
 build :
-	for c in $(COMPONENTS); do (cd $$c; make build); done
+	for c in $(COMPONENTS); do (cd $$c; $(MAKE) build); done
 
 clean :
-	for c in $(COMPONENTS); do (cd $$c; make clean); done
+	for c in $(COMPONENTS); do (cd $$c; $(MAKE) clean); done
 
 dist :
-	for c in $(COMPONENTS); do (cd $$c; make dist); done
+	for c in $(COMPONENTS); do (cd $$c; $(MAKE) dist); done

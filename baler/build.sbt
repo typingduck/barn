@@ -3,7 +3,7 @@ import com.twitter.sbt._
 
 name := "barn-baler"
 
-version := "0.1.1"
+version := "0.1.4"
 
 organization := "com.soundcloud"
 
@@ -58,6 +58,8 @@ fork in Slow := true
 //
 // artifacts
 //
+
+crossPaths := false
 
 // unfortunately, the below don't prevent including those jars in the
 // package-dist

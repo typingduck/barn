@@ -1,6 +1,6 @@
 .PHONY: build dist clean fpm
 
-VERSION := 0.5.1
+VERSION := 0.5.3
 DEB := barn-harvester_$(VERSION)_all.deb
 
 default : dist
@@ -15,7 +15,7 @@ clean :
 
 $(DEB) :
 	@echo "Building harvester .deb..."
-	@make fpm
+	$(MAKE) fpm
 	mkdir -p build/usr/local/bin/
 	cp barn-* build/usr/local/bin
 	fpm -C build \
