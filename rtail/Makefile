@@ -6,7 +6,7 @@ CABAL_DEV := ~/.cabal/bin/cabal-dev
 PROGRAMS  := cabal-dev/bin/*
 TARBALL		:= dist/rtail-$(VERSION)_$(OSARCH).tar.gz
 
-LIBZMQ   := libzmq
+LIBZMQ   := libzmq/lib/libzmq*
 ZMQ_BASE := zeromq-3.2.2
 ZMQ_TAR  := $(ZMQ_BASE).tar.gz
 ZMQ_URL  := http://download.zeromq.org/$(ZMQ_TAR)
@@ -31,8 +31,8 @@ $(TARBALL) :
 
 $(PROGRAMS) : *.hs
 	$(CABAL_DEV) install \
-		--extra-lib-dirs=`pwd`/$(LIBZMQ)/lib \
-		--extra-include-dirs=`pwd`/$(LIBZMQ)/include
+		--extra-lib-dirs=`pwd`/libzmq/lib \
+		--extra-include-dirs=`pwd`/libzmq/include
 
 $(CABAL_DEV) :
 	@echo "Checking for cabal-dev..."
@@ -40,8 +40,7 @@ $(CABAL_DEV) :
 
 $(LIBZMQ) : $(ZMQ_BASE)
 	(cd $(ZMQ_BASE); \
-		$(MAKE) clean; \
-		./configure --prefix=`pwd`/../$(LIBZMQ) && \
+		./configure --prefix=`pwd`/../libzmq && \
 		$(MAKE) && $(MAKE) install; \
 		exit 0)
 
