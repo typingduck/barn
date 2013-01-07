@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
   const int max_len = 500;
   char* buffer = new char[max_len];
   int len = 0;
-  int mb = atoi(argv[1]);
+  double mb = atof(argv[1]);
 
   cerr << "Writing " << mb << " MB of random lines to stdout per sec" << endl;
 
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
   while(true) {
     const clock_t begin_time = clock();
 
-    int max_bytes = mb * 1024 * 1024;
+    int max_bytes = int(mb * 1024 * 1024);
     int made_bytes = 0;
 
     while(made_bytes <= max_bytes) {
