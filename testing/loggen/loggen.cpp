@@ -24,7 +24,7 @@ void sleep_fraction(float fraction_of_second) {
   int milisec = fraction_of_second * 1000; // length of time to sleep, in miliseconds
   struct timespec req = {0};
   req.tv_sec = 0;
-  req.tv_nsec = milisec * 1000000L;
+  req.tv_nsec = milisec * 1000000L - 1; //Minus one not to exceed 999999999
   nanosleep(&req, (struct timespec *)NULL);
 }
 
