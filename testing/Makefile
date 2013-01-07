@@ -1,13 +1,14 @@
 .PHONY: build clean dist
 
-LOG_GEN := svlogd-log-generator
+COMPONENTS := loggen
 
-build : $(LOG_GEN)/loggen
+default : build
 
-dist : build
-
-$(LOG_GEN)/loggen : $(LOG_GEN)/*.cpp
-	(cd svlogd-log-generator; g++ -o loggen *.cpp)
+build :
+	for c in $(COMPONENTS); do (cd $$c; $(MAKE) build); done
 
 clean :
-	rm $(LOG_GEN)/loggen
+	for c in $(COMPONENTS); do (cd $$c; $(MAKE) clean); done
+
+dist :
+	for c in $(COMPONENTS); do (cd $$c; $(MAKE) dist); done
