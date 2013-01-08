@@ -26,7 +26,7 @@ test-thorough : start-hadoop
 	$(MAKE) stop-hadoop
 
 clean :
-	rm -r dist
+	rm -rf dist
 	$(SBT) clean
 
 start-hadoop : $(DAHOOP_BASE) $(DAHOOP_DATA)

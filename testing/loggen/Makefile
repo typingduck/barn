@@ -9,7 +9,7 @@ loggen : loggen.cpp
 	(g++ -o loggen *.cpp)
 
 clean :
-	rm loggen
+	rm -f loggen
 
 deb :
 	@echo "Building loggen .deb..."

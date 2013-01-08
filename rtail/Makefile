@@ -16,13 +16,13 @@ default : build
 build : $(CABAL_DEV) $(LIBZMQ) $(PROGRAMS)
 
 clean :
-	rm -r cabal-dev
-	rm -r dist
+	rm -rf cabal-dev
+	rm -rf dist
 
 clean-all : clean
-	rm -r $(ZMQ_BASE)
+	rm -rf $(ZMQ_BASE)
 	rm $(ZMQ_TAR)
-	rm -r $(LIBZMQ)
+	rm -rf $(LIBZMQ)
 
 dist : build $(TARBALL)
 

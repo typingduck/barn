@@ -10,8 +10,8 @@ build : default
 dist : $(DEB)
 
 clean :
-	rm -r build
-	rm *.deb
+	rm -rf build
+	rm -f *.deb
 
 $(DEB) :
 	@echo "Building harvester .deb..."
