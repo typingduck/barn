@@ -20,7 +20,7 @@ function sleepit {
   RSYNC_SOURCE=$1
   echo "Nothing more to sync. Hibernating till a log file is rotated on $RSYNC_SOURCE"
   if [[ "$uname" == 'Linux' ]]; then
-     inotifywait $INOTIFY_EXCLUSIONS --timeout 3600 -q -e close_write $RSYNC_SOURCE/
+     DUMMY=$(inotifywait $INOTIFY_EXCLUSIONS --timeout 3600 -q -e close_write $RSYNC_SOURCE/)
   elif [[ "$uname" == 'Darwin' ]]; then
      echo "I'm on OSX so I'm going to loop-sleep like a madman. Use Linux for inotify."
      sleep 10
@@ -41,7 +41,7 @@ function sync {
 
   for c in $CANDIDATES; do
     echo "Candidate on $RSYNC_SOURCE is $c"
-    rsync $RSYNC_INITIALS $RSYNC_SOURCE/$c $RSYNC_TARGET
+    DUMMY=$(rsync $RSYNC_INITIALS $RSYNC_SOURCE/$c $RSYNC_TARGET)
   done
 
   if [[ $CANDIDATES == "" ]]; then
