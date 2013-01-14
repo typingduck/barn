@@ -16,7 +16,7 @@ CATEGORY=$4
 
 #Monitor a subdirectory
 function sleepit {
-  uname=`uname`
+  uname=$(uname)
   RSYNC_SOURCE=$1
   echo "Nothing more to sync. Hibernating till a log file is rotated on $RSYNC_SOURCE"
   if [[ "$uname" == 'Linux' ]]; then
