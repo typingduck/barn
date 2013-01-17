@@ -19,21 +19,19 @@ object BarnHdfsWriter
   with ParamParser
   with TimeUtils {
 
-  val localTempDir = new Dir("/tmp")
-
   val (shipInterval, retention) = (10, 60) //in seconds
   val minMB = 10 //minimum megabytes to keep for each service!
   val defaultLookBackDays = 10
 
-  loadConf(args) { case (hadoopConf, localLogDir, hdfsLogDir) =>
+  loadConf(args) { case (hadoopConf, localLogDir, localTempDir, hdfsLogDir) =>
     continually(() => listSubdirectories(localLogDir)).iterator foreach {
       _().fold(logBarnError
-             , syncRootLogDir(hadoopConf, hdfsLogDir))
+             , syncRootLogDir(hadoopConf, localTempDir, hdfsLogDir))
     }
   }
 
   def syncRootLogDir
-    (hadoopConf: HadoopConf, hdfsLogDir: HdfsDir)
+    (hadoopConf: HadoopConf, localTempDir: Dir, hdfsLogDir: HdfsDir)
     (dirs: List[Dir]) : Unit = dirs match {
     case Nil =>
       info("No service has appeared in root log dir. Incorporating patience.")
@@ -42,27 +40,20 @@ object BarnHdfsWriter
       xs.par map { serviceDir =>
 
         info("Checking service " + serviceDir + " to sync.")
-
-        Thread.sleep(1000) //Replace me with iNotify and concurrent shippings
+        Thread.sleep(1000) //Replace me with iNotify
 
         val result = for {
           serviceInfo <- decodeServiceInfo(serviceDir)
-
           fs          <- createFileSystem(hadoopConf)
-
           localFiles  <- listSortedLocalFiles(serviceDir)
-
           lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
-
           plan        <- planNextShip(fs
                                     , serviceInfo
                                     , hdfsLogDir
                                     , shipInterval
                                     , lookBack)
-
           candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
           concatted   <- concatCandidates(candidates, localTempDir)
-
           lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
           targetName_  = targetName(lastTaistamp, serviceInfo)
           _           <- atomicShipToHdfs(fs
@@ -70,14 +61,11 @@ object BarnHdfsWriter
                                         , plan hdfsDir
                                         , targetName_
                                         , plan hdfsTempDir)
-
           shippedTS   <- svlogdFileTimestamp(candidates head)
-
           _           <- cleanupLocal(serviceDir
                                          , retention
                                          , shippedTS
                                          , minMB)
-
         } yield ()
 
         result ||| logBarnError
