@@ -43,11 +43,15 @@ trait FileCombiner extends Logging {
                              , classOf[BW]
                              )
 
-    localFiles.foreach( file =>
-    Source.fromFile(file).getLines.foreach( line =>
-      outputWriter.append( new LW(System.currentTimeMillis())
-                         , new BW(f(line)))
-    ))
+    localFiles.foreach( file => {
+      val bufferedSource = Source.fromFile(file)
+
+      try bufferedSource.getLines.foreach( line =>
+            outputWriter.append( new LW(System.currentTimeMillis())
+                               , new BW(f(line))))
+      finally bufferedSource.close
+
+    })
 
     outputWriter.close
     fs.close
