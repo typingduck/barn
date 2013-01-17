@@ -60,7 +60,7 @@ object BarnHdfsWriter
                                         , plan hdfsDir
                                         , targetName_
                                         , plan hdfsTempDir)
-          shippedTS   <- svlogdFileTimestamp(candidates head)
+          shippedTS   <- svlogdFileTimestamp(candidates last)
           _           <- cleanupLocal(serviceDir
                                          , retention
                                          , shippedTS
