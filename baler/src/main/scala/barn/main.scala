@@ -36,7 +36,7 @@ object BarnHdfsWriter
       info("No service has appeared in root log dir. Incorporating patience.")
       Thread.sleep(1000)
     case xs =>
-      (if(config.runParallel) xs.par else xs) map { serviceDir =>
+      (if(barnConf.runParallel) xs.par else xs) map { serviceDir =>
 
         info("Checking service " + serviceDir + " to sync.")
         Thread.sleep(1000) //Replace me with iNotify
