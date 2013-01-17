@@ -23,37 +23,36 @@ object BarnHdfsWriter
   val minMB = 10 //minimum megabytes to keep for each service!
   val defaultLookBackDays = 10
 
-  loadConf(args) { case (hadoopConf, localLogDir, localTempDir, hdfsLogDir) =>
-    continually(() => listSubdirectories(localLogDir)).iterator foreach {
+  loadConf(args) { barnConf =>
+    continually(() => listSubdirectories(barnConf.localLogDir)).iterator foreach {
       _().fold(logBarnError
-             , syncRootLogDir(hadoopConf, localTempDir, hdfsLogDir))
+             , syncRootLogDir(barnConf))
     }
   }
 
-  def syncRootLogDir
-    (hadoopConf: HadoopConf, localTempDir: Dir, hdfsLogDir: HdfsDir)
-    (dirs: List[Dir]) : Unit = dirs match {
+  def syncRootLogDir(barnConf: BarnConf)(dirs: List[Dir])
+  : Unit = dirs match {
     case Nil =>
       info("No service has appeared in root log dir. Incorporating patience.")
       Thread.sleep(1000)
     case xs =>
-      xs.par map { serviceDir =>
+      (if(config.runParallel) xs.par else xs) map { serviceDir =>
 
         info("Checking service " + serviceDir + " to sync.")
         Thread.sleep(1000) //Replace me with iNotify
 
         val result = for {
           serviceInfo <- decodeServiceInfo(serviceDir)
-          fs          <- createFileSystem(hadoopConf)
+          fs          <- createFileSystem(barnConf.hdfsEndpoint)
           localFiles  <- listSortedLocalFiles(serviceDir)
           lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
           plan        <- planNextShip(fs
                                     , serviceInfo
-                                    , hdfsLogDir
+                                    , barnConf.hdfsLogDir
                                     , shipInterval
                                     , lookBack)
           candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
-          concatted   <- concatCandidates(candidates, localTempDir)
+          concatted   <- concatCandidates(candidates, barnConf.localTempDir)
           lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
           targetName_  = targetName(lastTaistamp, serviceInfo)
           _           <- atomicShipToHdfs(fs

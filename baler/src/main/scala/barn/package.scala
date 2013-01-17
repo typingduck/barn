@@ -6,6 +6,7 @@ package object barn {
   import org.apache.commons.lang.exception.ExceptionUtils._
   import scalaz._
   import Scalaz._
+  import org.apache.hadoop.conf.{Configuration => HadoopConf}
 
   /*
     File/Dir/Path on Local/Hdfs legend for the confusionary situation:
@@ -30,6 +31,14 @@ package object barn {
   case class InvalidNameFormat(str: String) extends BarnError
   case class CombinedError(errors: BarnError*) extends BarnError
   case class FileNotFound(str: String) extends BarnError
+
+  case class BarnConf(localLogDir: Dir
+                    , localTempDir: Dir
+                    , hdfsLogDir: HdfsDir
+                    , hdfsEndpoint: HadoopConf
+                    , runParallel: Boolean
+                    , shipInterval: Int
+                    , retention: Int)
 
   private val lineDelim = System.getProperty("line.separator")
 

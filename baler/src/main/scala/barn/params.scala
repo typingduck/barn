@@ -11,21 +11,23 @@ object ParamParser extends ParamParser
 trait ParamParser
   extends Logging {
 
-  case class BarnConf(localLogDir : String
-                    , localTempDir: String
-                    , hdfsLogDir : String
-                    , hdfsEndpoint : String)
-
   val parser = new OptionParser[BarnConf]("barn-baler") {
     def options = Seq(
       opt("l", "local-log-dir", "<dir>", "directory containing the local logs.")
-          {(v: String, c: BarnConf) => c.copy(localLogDir = v)},
+          {(v: String, c: BarnConf) => c.copy(localLogDir = new Dir(v))},
       opt("t", "local-temp-dir", "<dir>", "directory to write temp files.")
-          {(v: String, c: BarnConf) => c.copy(localTempDir = v)},
+          {(v: String, c: BarnConf) => c.copy(localTempDir = new Dir(v))},
       opt("h", "hdfs-log-dir", "<dir>", "directory containing shipped logs.")
-          {(v: String, c: BarnConf) => c.copy(hdfsLogDir = v)},
+          {(v: String, c: BarnConf) => c.copy(hdfsLogDir = new HdfsDir(v))},
       opt("s", "hdfs", "<hdfs://host:port>", "hdfs endpoint")
-          {(v: String, c: BarnConf) => c.copy(hdfsEndpoint = v)}
+          {(v: String, c: BarnConf) => c.copy(hdfsEndpoint =
+            tap(new HadoopConf()){_.set("fs.default.name", v)})},
+      booleanOpt("p", "run-parallel", "<bool>", "ship service logs in parallel. (default: false)")
+          {(v: Boolean, c: BarnConf) => c.copy(runParallel = v)},
+      intOpt("i", "ship-interval", "<int>", "How often to ship each service's logs. (sefault: 3600 s)")
+          {(v: Int, c: BarnConf) => c.copy(shipInterval = v)},
+      intOpt("r", "retention", "<int>", "How long to keep data in local storage. (default: 86400 s)")
+          {(v: Int, c: BarnConf) => c.copy(retention = v)}
     )
   }
 
@@ -33,28 +35,19 @@ trait ParamParser
   type LocalLogDir = Dir
 
   def loadConf(args: Array[String])
-              (body: (HadoopConf, LocalLogDir, LocalTempDir, HdfsDir) => Unit)
+              (body: BarnConf => Unit)
   : Unit = {
 
-    parser.parse(args, BarnConf(null,null,null,null)) map { config =>
+    val barnConfDefault = BarnConf(null,null,null,null,false,3600,86400)
 
-      if(config.localLogDir == null ||
-         config.localTempDir == null ||
-         config.hdfsLogDir == null ||
-         config.hdfsEndpoint == null) {
+    parser.parse(args, barnConfDefault) map { config =>
 
+      if(config.localLogDir == null || config.localTempDir == null ||
+         config.hdfsLogDir == null || config.hdfsEndpoint == null)
         parser.showUsage
-      } else {
+      else
+        body(config)
 
-        val hdfsEndpoint = tap(new HadoopConf()){_.set("fs.default.name"
-                                                          , config.hdfsEndpoint)}
-        val localLogDir = new Dir(config.localLogDir)
-        val localTempDir = new Dir(config.localTempDir)
-
-        val hdfsLogDir = new HdfsDir(config.hdfsLogDir)
-
-        body(hdfsEndpoint, localLogDir, localTempDir, hdfsLogDir)
-      }
     } getOrElse { false }
   }
 
