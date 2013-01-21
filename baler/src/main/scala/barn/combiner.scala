@@ -43,8 +43,10 @@ trait FileCombiner extends Logging {
                              , classOf[BW]
                              )
 
+    val bufferSize = 20 * 1024 * 1024
+
     localFiles.foreach( file => {
-      val bufferedSource = Source.fromFile(file)
+      val bufferedSource = Source.fromFile(file, bufferSize)
 
       try bufferedSource.getLines.foreach( line =>
             outputWriter.append( new LW(System.currentTimeMillis())
