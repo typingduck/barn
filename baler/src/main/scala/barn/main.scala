@@ -19,7 +19,6 @@ object BarnHdfsWriter
   with ParamParser
   with TimeUtils {
 
-  val (shipInterval, retention) = (10, 60) //in seconds
   val minMB = 10 //minimum megabytes to keep for each service!
   val defaultLookBackDays = 10
 
@@ -55,7 +54,7 @@ object BarnHdfsWriter
       plan        <- planNextShip(fs
                                 , serviceInfo
                                 , barnConf.hdfsLogDir
-                                , shipInterval
+                                , barnConf.shipInterval
                                 , lookBack)
       candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
       concatted   <- concatCandidates(candidates, barnConf.localTempDir)
@@ -68,7 +67,7 @@ object BarnHdfsWriter
                                     , plan hdfsTempDir)
       shippedTS   <- svlogdFileTimestamp(candidates last)
       _           <- cleanupLocal(serviceDir
-                                     , retention
+                                     , barnConf.retention
                                      , shippedTS
                                      , minMB)
     } yield ()
