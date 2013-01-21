@@ -36,39 +36,44 @@ object BarnHdfsWriter
       info("No service has appeared in root log dir. Incorporating patience.")
       Thread.sleep(1000)
     case xs =>
-      (if(barnConf.runParallel) xs.par else xs) map { serviceDir =>
+     //Working around SI-4843 https://issues.scala-lang.org/browse/SI-4843
+     if(barnConf.runParallel)
+        xs.par map actOnServiceDir(barnConf)
+      else
+        xs map actOnServiceDir(barnConf)
+  }
 
-        info("Checking service " + serviceDir + " to sync.")
-        Thread.sleep(1000) //Replace me with iNotify
+  def actOnServiceDir(barnConf: BarnConf)(serviceDir : Dir) = {
+    info("Checking service " + serviceDir + " to sync.")
+    Thread.sleep(1000) //Replace me with iNotify
 
-        val result = for {
-          serviceInfo <- decodeServiceInfo(serviceDir)
-          fs          <- createFileSystem(barnConf.hdfsEndpoint)
-          localFiles  <- listSortedLocalFiles(serviceDir)
-          lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
-          plan        <- planNextShip(fs
-                                    , serviceInfo
-                                    , barnConf.hdfsLogDir
-                                    , shipInterval
-                                    , lookBack)
-          candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
-          concatted   <- concatCandidates(candidates, barnConf.localTempDir)
-          lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
-          targetName_  = targetName(lastTaistamp, serviceInfo)
-          _           <- atomicShipToHdfs(fs
-                                        , concatted
-                                        , plan hdfsDir
-                                        , targetName_
-                                        , plan hdfsTempDir)
-          shippedTS   <- svlogdFileTimestamp(candidates last)
-          _           <- cleanupLocal(serviceDir
-                                         , retention
-                                         , shippedTS
-                                         , minMB)
-        } yield ()
+    val result = for {
+      serviceInfo <- decodeServiceInfo(serviceDir)
+      fs          <- createFileSystem(barnConf.hdfsEndpoint)
+      localFiles  <- listSortedLocalFiles(serviceDir)
+      lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
+      plan        <- planNextShip(fs
+                                , serviceInfo
+                                , barnConf.hdfsLogDir
+                                , shipInterval
+                                , lookBack)
+      candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
+      concatted   <- concatCandidates(candidates, barnConf.localTempDir)
+      lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
+      targetName_  = targetName(lastTaistamp, serviceInfo)
+      _           <- atomicShipToHdfs(fs
+                                    , concatted
+                                    , plan hdfsDir
+                                    , targetName_
+                                    , plan hdfsTempDir)
+      shippedTS   <- svlogdFileTimestamp(candidates last)
+      _           <- cleanupLocal(serviceDir
+                                     , retention
+                                     , shippedTS
+                                     , minMB)
+    } yield ()
 
-        result ||| logBarnError
-      }
+    result ||| logBarnError
   }
 
   def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)
