@@ -122,7 +122,7 @@ trait HdfsPlacementStrategy
   def targetDirs(base: DateTime, baseHdfsDir: HdfsDir, lowerBound: DateTime)
   : Stream[HdfsDir] = {
     (dateBucket(base, 0) #::
-     dateStream(base, 1).takeWhile(_ isAfter lowerBound.toDateMidnight))
+     dateStream(base, 1).takeWhile(_ isAfter lowerBound.minusDays(1).toDateMidnight))
     .map(datePath(baseHdfsDir, _))
   }
 
