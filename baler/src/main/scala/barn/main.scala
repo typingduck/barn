@@ -78,7 +78,7 @@ object BarnHdfsWriter
 
   def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)
   : Validation[BarnError, DateTime]
-   = inceptRight(localFiles.lastOption.map(svlogdFileTimestamp))
+   = inceptRight(localFiles.headOption.map(svlogdFileTimestamp))
       .map(_ getOrElse DateTime.now.minusDays(defaultLookBackDays))
 
   def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String])
