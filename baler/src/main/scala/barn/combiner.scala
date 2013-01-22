@@ -2,6 +2,7 @@ package barn
 
 import org.apache.hadoop.fs.{FileSystem}
 import org.apache.hadoop.io.SequenceFile
+import org.apache.hadoop.io.SequenceFile.CompressionType
 import org.apache.commons.io.IOUtils
 import java.io.{FileInputStream, FileOutputStream}
 import scala.io.Source
@@ -35,13 +36,14 @@ trait FileCombiner extends Logging {
     val conf = new Configuration
     val fs = FileSystem.getLocal(conf)
 
-    val outputWriter =
-      new SequenceFile.Writer( fs
-                             , conf
-                             , new HdfsDir(outputFile.getAbsolutePath)
-                             , classOf[LW]
-                             , classOf[BW]
-                             )
+    val outputWriter = SequenceFile.createWriter( fs
+                         , conf
+                         , new HdfsDir(outputFile.getAbsolutePath)
+                         , classOf[LW]
+                         , classOf[BW]
+                         , CompressionType.BLOCK
+                         , compressionCodec
+                       )
 
     val bufferSize = 20 * 1024 * 1024
 
@@ -80,6 +82,22 @@ trait FileCombiner extends Logging {
     combinedLocalFile success
   } , "Can't combine files into a sequence file." +
       " Candidates to combine: " + candidates)
+
+
+  import org.apache.hadoop.io.compress.CompressionCodec;
+
+  def compressionCodec : CompressionCodec = {
+    import org.apache.hadoop.io.compress.DefaultCodec;
+    import org.apache.hadoop.io.compress.SnappyCodec;
+    import org.apache.hadoop.io.compress.snappy.LoadSnappy;
+
+    if (LoadSnappy.isLoaded) {
+      new SnappyCodec()
+    } else {
+      warn("Snappy codec isn't loaded. Using the default compression codec")
+      new DefaultCodec();
+    }
+  }
 
 }
 
