@@ -21,6 +21,7 @@ object BarnHdfsWriter
 
   val minMB = 10 //minimum megabytes to keep for each service!
   val defaultLookBackDays = 10
+  val excludeList = List("""^\..*""") //Exclude files starting with dot (temp)
 
   loadConf(args) { barnConf =>
     continually(() => listSubdirectories(barnConf.localLogDir)).iterator foreach {
@@ -49,7 +50,7 @@ object BarnHdfsWriter
     val result = for {
       serviceInfo <- decodeServiceInfo(serviceDir)
       fs          <- createFileSystem(barnConf.hdfsEndpoint)
-      localFiles  <- listSortedLocalFiles(serviceDir)
+      localFiles  <- listSortedLocalFiles(serviceDir, excludeList)
       lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
       plan        <- planNextShip(fs
                                 , serviceInfo
