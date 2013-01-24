@@ -13,7 +13,8 @@ trait Logging {
   def warn(s: String) = println("WARN " + s)
   def error(s: String) = println("ERROR " + s)
 
-  def logBarnError(s: BarnError) = error(s.toString)
+  def logBarnError(context: String)(s: BarnError)
+  = error("[" + context + "] " + s.toString)
 
 }
 

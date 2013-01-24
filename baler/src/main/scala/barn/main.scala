@@ -24,7 +24,7 @@ object BarnHdfsWriter
 
   loadConf(args) { barnConf =>
     continually(() => listSubdirectories(barnConf.localLogDir)).iterator foreach {
-      _().fold(logBarnError
+      _().fold(logBarnError("List dirs in" + barnConf.localLogDir)
              , syncRootLogDir(barnConf))
     }
   }
@@ -72,7 +72,7 @@ object BarnHdfsWriter
                                      , minMB)
     } yield ()
 
-    result ||| logBarnError
+    result ||| logBarnError("Sync of " + serviceDir + "")
   }
 
   def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)
