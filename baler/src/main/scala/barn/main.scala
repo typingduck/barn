@@ -44,7 +44,6 @@ object BarnHdfsWriter
   }
 
   def actOnServiceDir(barnConf: BarnConf)(serviceDir : Dir) = {
-    info("Checking service " + serviceDir + " to sync.")
     Thread.sleep(1000) //Replace me with iNotify
 
     val result = for {
