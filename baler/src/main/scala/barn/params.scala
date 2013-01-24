@@ -36,7 +36,7 @@ trait ParamParser
               (body: BarnConf => Unit)
   : Unit = {
 
-    val barnConfDefault = BarnConf(null,null,null,null,false,3600,86400)
+    val barnConfDefault = BarnConf(null,null,null,null,false,3600)
 
     parser.parse(args, barnConfDefault) map { config =>
 
