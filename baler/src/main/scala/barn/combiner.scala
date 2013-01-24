@@ -77,7 +77,8 @@ trait FileCombiner extends Logging {
   : Validation[BarnError, File] = validate ({
     val combinedName = RandomStringUtils.randomAlphanumeric(20)
     val combinedLocalFile = new File(targetDir, combinedName)
-    info("Combining " + candidates.size + " into " + combinedLocalFile)
+    info("Combining " + candidates.size + " ("+ candidates.head + " and ... )" +
+      " into " + combinedLocalFile)
     combineIntoSeqFile(candidates, combinedLocalFile, processFormat)
     combinedLocalFile success
   } , "Can't combine files into a sequence file." +
