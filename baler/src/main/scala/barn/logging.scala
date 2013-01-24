@@ -9,9 +9,11 @@ trait Logging {
 
   def now : String = formatter.print(DateTime.now)
 
-  def info(s: String) = println("INFO " + s)
-  def warn(s: String) = println("WARN " + s)
-  def error(s: String) = println("ERROR " + s)
+  import java.lang.Thread.{currentThread => thread}
+
+  def info(s: String) = println("INFO [" + thread.getName() + "] " + s)
+  def warn(s: String) = println("WARN [" + thread.getName() + "] "+ s)
+  def error(s: String) = println("ERROR [" + thread.getName() + "] "+ s)
 
   def logBarnError(context: String)(s: BarnError)
   = error("[" + context + "] " + s.toString)
