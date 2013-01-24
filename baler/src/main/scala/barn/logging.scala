@@ -9,9 +9,9 @@ trait Logging {
 
   def now : String = formatter.print(DateTime.now)
 
-  def info(s: String) = println(now + "  INFO " + s)
-  def warn(s: String) = println(now + "  WARN " + s)
-  def error(s: String) = println(now + " ERROR " + s)
+  def info(s: String) = println("INFO " + s)
+  def warn(s: String) = println("WARN " + s)
+  def error(s: String) = println("ERROR " + s)
 
   def logBarnError(s: BarnError) = error(s.toString)
 
