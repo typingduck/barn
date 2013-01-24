@@ -67,9 +67,8 @@ object BarnHdfsWriter
                                     , plan hdfsTempDir)
       shippedTS   <- svlogdFileTimestamp(candidates last)
       _           <- cleanupLocal(serviceDir
-                                     , barnConf.retention
-                                     , shippedTS
-                                     , minMB)
+                                , shippedTS
+                                , minMB)
     } yield ()
 
     result ||| logBarnError("Sync of " + serviceDir + "")

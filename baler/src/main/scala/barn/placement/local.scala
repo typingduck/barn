@@ -23,7 +23,6 @@ trait LocalPlacementStrategy
   }
 
   def cleanupLocal(dir: Dir,
-                   localRetention: Int,
                    cleanupLimit: DateTime,
                    minMB: Int,
                    exclude: List[String] = List empty)
@@ -39,9 +38,7 @@ trait LocalPlacementStrategy
           case deletedSoFar -> curSize -> file =>
             val ts = Tai64.convertTai64ToTime(svlogdFileNameToTaiString(file.getName))
 
-            enoughTimePast(ts, localRetention) &&
-              ts.isBefore(cleanupLimit) &&
-              curSize > minMB * 1024 * 1024  match {
+            ts.isBefore(cleanupLimit) && curSize > minMB*1024*1024 match {
               case true =>
                 val fileLength = file.length
                 file.delete

@@ -25,9 +25,7 @@ trait ParamParser
       booleanOpt("p", "run-parallel", "<bool>", "ship service logs in parallel. (default: false)")
           {(v: Boolean, c: BarnConf) => c.copy(runParallel = v)},
       intOpt("i", "ship-interval", "<int>", "How often to ship each service's logs. (sefault: 3600 s)")
-          {(v: Int, c: BarnConf) => c.copy(shipInterval = v)},
-      intOpt("r", "retention", "<int>", "How long to keep data in local storage. (default: 86400 s)")
-          {(v: Int, c: BarnConf) => c.copy(retention = v)}
+          {(v: Int, c: BarnConf) => c.copy(shipInterval = v)}
     )
   }
 

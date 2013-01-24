@@ -37,8 +37,7 @@ package object barn {
                     , hdfsLogDir: HdfsDir
                     , hdfsEndpoint: HadoopConf
                     , runParallel: Boolean
-                    , shipInterval: Int
-                    , retention: Int)
+                    , shipInterval: Int)
 
   private val lineDelim = System.getProperty("line.separator")
 
