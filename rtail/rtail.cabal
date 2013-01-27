@@ -7,22 +7,34 @@ maintainer:          kim@soundcloud.com
 build-type:          Simple
 cabal-version:       >=1.8
 
-executable rtaild
-  main-is:           Main.hs
-  build-depends:     base >= 4.5 && < 5, bytestring, zeromq3-haskell
+library
+  exposed-modules:   Network.Rtail
 
+  hs-source-dirs:    src
+  ghc-options:       -Wall -O -rtsopts
+
+  build-depends:     base > 4 && < 5, bytestring, zeromq3-haskell
+
+executable rtaild
   hs-source-dirs:    rtaild
+  main-is:           Main.hs
+
+  build-depends:     base > 4 && < 5, bytestring, rtail
+
   ghc-options:       -Wall -O2 -threaded -rtsopts
 
 executable rtailp
-  main-is:           Main.hs
-  build-depends:     base >= 4.5 && < 5, bytestring, zeromq3-haskell
-
   hs-source-dirs:    rtailp
+  main-is:           Main.hs
+
+  build-depends:     base > 4 && < 5, bytestring, rtail
+
   ghc-options:       -Wall -O2 -threaded -rtsopts
 
 executable rtail
+  hs-source-dirs:    rtail
   main-is:           Main.hs
-  build-depends:     base >= 4.5 && < 5, bytestring, zeromq3-haskell
+
+  build-depends:     base > 4 && < 5, bytestring, rtail
 
   ghc-options:       -Wall -O2 -threaded -rtsopts
