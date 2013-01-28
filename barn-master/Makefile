@@ -1,7 +1,7 @@
 .PHONY: build dist clean fpm
 
 VERSION := 0.5.5
-DEB := barn-harvester_$(VERSION)_all.deb
+DEB := barn-master_$(VERSION)_all.deb
 
 default : dist
 
@@ -14,7 +14,7 @@ clean :
 	rm -f *.deb
 
 $(DEB) :
-	@echo "Building harvester .deb..."
+	@echo "Building master .deb..."
 	$(MAKE) fpm
 	mkdir -p build/usr/local/bin/
 	cp barn-* build/usr/local/bin
@@ -22,14 +22,11 @@ $(DEB) :
 			-s dir -t deb \
 			-v $(VERSION) \
 			-a all \
-			-n barn-harvester \
+			-n barn-master \
 			-d bash \
 			-d rsync \
 			-d inotify-tools \
-			./usr/local/bin/barn-harvester-agent \
-			./usr/local/bin/barn-harvester-master \
-			./usr/local/bin/barn-harvester-replicate \
-			./usr/local/bin/barn-harvester-slave
+			./usr/local/bin/barn-master
 
 fpm :
 	@echo "Checking for fpm gem..."

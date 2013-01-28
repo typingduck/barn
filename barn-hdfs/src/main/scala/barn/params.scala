@@ -11,7 +11,7 @@ object ParamParser extends ParamParser
 trait ParamParser
   extends Logging {
 
-  val parser = new OptionParser[BarnConf]("barn-baler") {
+  val parser = new OptionParser[BarnConf]("$") {
     def options = Seq(
       opt("l", "local-log-dir", "<dir>", "directory containing the local logs.")
           {(v: String, c: BarnConf) => c.copy(localLogDir = new Dir(v))},

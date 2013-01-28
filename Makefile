@@ -1,6 +1,6 @@
 .PHONY: build clean dist
 
-COMPONENTS := baler rtail harvester testing
+COMPONENTS := barn-hdfs rtail barn-master barn-agent
 
 default : build
 
