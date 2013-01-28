@@ -1,7 +1,7 @@
 import AssemblyKeys._
 import com.twitter.sbt._
 
-name := "barn-baler"
+name := "barn-hdfs"
 
 version := "0.1.9"
 
