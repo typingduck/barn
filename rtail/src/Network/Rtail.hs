@@ -26,7 +26,7 @@ import qualified Data.ByteString   as BS
 newtype AggregationUri = A { unA :: String } deriving (Show)
 newtype PublicUri      = P { unP :: String } deriving (Show)
 
-aggregationUri :: String -> AggregationUri
+aggregationUri :: FilePath -> AggregationUri
 aggregationUri path = A $ "ipc://" ++ path
 
 publicUri :: String -> PublicUri
@@ -76,12 +76,13 @@ runPipe (A ipc) topic bufsize = do
 
   where
     loop sock = do
-        chunk <- BS.hGet stdin bufsize
+        chunk <- BS.hGetSome stdin bufsize
 
         unless (BS.null chunk) $ do
-            let lines' = BS.split 0x0A chunk
+            let lines' = filter (not . BS.null) . BS.split 0x0A $ chunk
             sendMulti sock $ topic : lines'
             mapM_ (BS.hPut stdout) . intersperse nl $ lines'
+            BS.hPut stdout nl
 
             loop sock
 
