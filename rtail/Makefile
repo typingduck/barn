@@ -1,10 +1,11 @@
-.PHONY: build clean clean-all dist
+.PHONY: build clean clean-all dist fom
 
 VERSION   := $(shell cat rtail.cabal | sed -n -E -e 's/^version[[:space:]]*:[[:space:]]*([0-9.]+)/\1/p')
 OSARCH		:= $(shell uname -sm | tr ' ' -)
 CABAL_DEV := ~/.cabal/bin/cabal-dev
 PROGRAMS  := cabal-dev/bin/*
 TARBALL		:= dist/rtail-$(VERSION)_$(OSARCH).tar.gz
+DEB				:= dist/rtail_$(VERSION)_$(OSARCH).deb
 
 LIBZMQ   := libzmq/lib/libzmq*
 ZMQ_BASE := zeromq-3.2.2
@@ -24,12 +25,28 @@ clean-all : clean
 	rm $(ZMQ_TAR)
 	rm -rf $(LIBZMQ)
 
-dist : build $(TARBALL)
+dist : build $(TARBALL) $(DEB)
 
 $(TARBALL) :
 	(cd cabal-dev/bin; tar -czf ../../$(TARBALL) rtail*)
 
-$(PROGRAMS) : *.hs
+$(DEB) :
+	@echo "Building rtail .deb..."
+	$(MAKE) fpm
+	mkdir -p dist/deb/usr/local/bin/
+	cp cabal-dev/bin/rtail* dist/deb/usr/local/bin
+	fpm -C dist/deb \
+			-s dir \
+			-t deb \
+			-a $(OSARCH) \
+			-v $(VERSION) \
+			-n rtail \
+			./usr/local/bin/rtail \
+			./usr/local/bin/rtaild \
+			./usr/local/bin/rtailp
+	mv rtail_$(VERSION)_$(OSARCH).deb dist
+
+$(PROGRAMS) : **/*.hs
 	$(CABAL_DEV) install \
 		--extra-lib-dirs=`pwd`/libzmq/lib \
 		--extra-include-dirs=`pwd`/libzmq/include
@@ -49,3 +66,7 @@ $(ZMQ_BASE) : $(ZMQ_TAR)
 
 $(ZMQ_TAR) :
 	curl $(ZMQ_URL) > $(ZMQ_TAR)
+
+fpm :
+	@echo "Checking for fpm gem..."
+	@(gem list | grep ^fpm > /dev/null || gem install fpm)
