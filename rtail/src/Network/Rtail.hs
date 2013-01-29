@@ -14,7 +14,7 @@ module Network.Rtail
 
 
 import           Control.Exception (finally)
-import           Control.Monad     (forever)
+import           Control.Monad     (forever, unless)
 import           Data.ByteString   (ByteString)
 import           Data.List         (intersperse)
 import           System.IO
@@ -63,18 +63,27 @@ runDaemon (A ipc) (P pub) =
 
             forever $ receiveMulti subS >>= sendMulti pubS
 
-runPipe :: AggregationUri -> ByteString -> IO ()
-runPipe (A ipc) topic =
+runPipe :: AggregationUri -> ByteString -> Int -> IO ()
+runPipe (A ipc) topic bufsize = do
+    hSetBuffering stdin (BlockBuffering (Just bufsize))
+
     withContext $ \ c -> do
         setIoThreads 1 c
 
         withSocket c Pub $ \ s -> do
             connect s ipc
+            loop s
 
-            forever $ do
-                l <- BS.getLine
-                sendMulti s [topic, l]
-                BS.hPut stdout l >> BS.hPut stdout nl
+  where
+    loop sock = do
+        chunk <- BS.hGet stdin bufsize
+
+        unless (BS.null chunk) $ do
+            let lines' = BS.split 0x0A chunk
+            sendMulti sock $ topic : lines'
+            mapM_ (BS.hPut stdout) . intersperse nl $ lines'
+
+            loop sock
 
 nl :: ByteString
 nl = BS.pack [0x0A]
