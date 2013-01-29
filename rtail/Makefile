@@ -4,6 +4,7 @@ VERSION   := $(shell cat rtail.cabal | sed -n -E -e 's/^version[[:space:]]*:[[:s
 OSARCH		:= $(shell uname -sm | tr ' ' -)
 CABAL_DEV := ~/.cabal/bin/cabal-dev
 PROGRAMS  := cabal-dev/bin/*
+SOURCES		:= $(shell find . -name "*.hs")
 TARBALL		:= dist/rtail-$(VERSION)_$(OSARCH).tar.gz
 DEB				:= dist/rtail_$(VERSION)_$(OSARCH).deb
 
@@ -46,7 +47,7 @@ $(DEB) :
 			./usr/local/bin/rtailp
 	mv rtail_$(VERSION)_$(OSARCH).deb dist
 
-$(PROGRAMS) : **/*.hs
+$(PROGRAMS) : $(SOURCES)
 	$(CABAL_DEV) install \
 		--extra-lib-dirs=`pwd`/libzmq/lib \
 		--extra-include-dirs=`pwd`/libzmq/include
