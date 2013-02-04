@@ -17,16 +17,20 @@ object BarnHdfsWriter
   with HdfsPlacementStrategy
   with LocalPlacementStrategy
   with ParamParser
-  with TimeUtils {
+  with TimeUtils
+  with Instruments {
 
   val minMB = 10 //minimum megabytes to keep for each service!
   val defaultLookBackDays = 10
   val excludeList = List("""^\..*""") //Exclude files starting with dot (temp)
 
   loadConf(args) { barnConf =>
-    continually(() => listSubdirectories(barnConf.localLogDir)).iterator foreach {
-      _().fold(logBarnError("List dirs in" + barnConf.localLogDir)
-             , syncRootLogDir(barnConf))
+    continually(() => listSubdirectories(barnConf.localLogDir)).iterator foreach { listDirs => {
+        listDirs().fold(logBarnError("List dirs in" + barnConf.localLogDir)
+               , syncRootLogDir(barnConf))
+
+        Thread.sleep(1000) //Replace me with iNotify
+      }
     }
   }
 
@@ -44,7 +48,8 @@ object BarnHdfsWriter
   }
 
   def actOnServiceDir(barnConf: BarnConf)(serviceDir : Dir) = {
-    Thread.sleep(1000) //Replace me with iNotify
+
+    reportOngoingSync {
 
     val result = for {
       serviceInfo <- decodeServiceInfo(serviceDir)
@@ -56,15 +61,21 @@ object BarnHdfsWriter
                                 , barnConf.hdfsLogDir
                                 , barnConf.shipInterval
                                 , lookBack)
+
       candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
-      concatted   <- concatCandidates(candidates, barnConf.localTempDir)
+      concatted   <- reportCombineTime(
+                       concatCandidates(candidates, barnConf.localTempDir))
+
       lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
       targetName_  = targetName(lastTaistamp, serviceInfo)
-      _           <- atomicShipToHdfs(fs
+
+      _           <- reportShipTime(
+                      atomicShipToHdfs(fs
                                     , concatted
                                     , plan hdfsDir
                                     , targetName_
-                                    , plan hdfsTempDir)
+                                    , plan hdfsTempDir))
+
       shippedTS   <- svlogdFileTimestamp(candidates last)
       _           <- cleanupLocal(serviceDir
                                 , shippedTS
@@ -72,6 +83,14 @@ object BarnHdfsWriter
     } yield ()
 
     result ||| logBarnError("Sync of " + serviceDir + "")
+    result ||| reportError
+
+    }
+  }
+
+  def reportError(e: BarnError) = e match {
+    case _ : BarnFatalError => reportFatalError
+    case _ => ()
   }
 
   def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)

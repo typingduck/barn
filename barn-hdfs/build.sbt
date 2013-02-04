@@ -29,6 +29,8 @@ libraryDependencies := Seq(
 , "org.scalatest"     %% "scalatest"    % "1.6.1"  % "test,slow"
 , "org.scalacheck"    %% "scalacheck"   % "1.10.0" % "test,slow"
 , "com.github.scopt"  %% "scopt"        % "2.1.0"
+, "com.yammer.metrics" % "metrics-ganglia"  % "3.0.0.sc-SNAPSHOT"
+, "com.yammer.metrics" %% "metrics-scala"   % "3.0.0.sc-SNAPSHOT"
 )
 
 

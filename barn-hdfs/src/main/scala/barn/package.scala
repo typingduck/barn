@@ -24,13 +24,16 @@ package object barn {
   type HdfsDir = HdfsFile
 
   sealed trait BarnError
-  case class ThrownException(str: String) extends BarnError
-  case class RenameFailed(str: String) extends BarnError
+  sealed trait BarnFatalError extends BarnError
+
+  case class ThrownException(str: String) extends BarnFatalError
+  case class RenameFailed(str: String) extends BarnFatalError
+  case class InvalidNameFormat(str: String) extends BarnFatalError
+  case class CombinedError(errors: BarnError*) extends BarnFatalError
+  case class FileNotFound(str: String) extends BarnFatalError
+
   case class NothingToSync(str: String) extends BarnError
   case class SyncThrottled(str: String) extends BarnError
-  case class InvalidNameFormat(str: String) extends BarnError
-  case class CombinedError(errors: BarnError*) extends BarnError
-  case class FileNotFound(str: String) extends BarnError
 
   case class BarnConf(localLogDir: Dir
                     , localTempDir: Dir
