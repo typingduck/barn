@@ -24,15 +24,22 @@ object BarnHdfsWriter
   val defaultLookBackDays = 10
   val excludeList = List("""^\..*""") //Exclude files starting with dot (temp)
 
-  loadConf(args) { barnConf =>
-    continually(() => listSubdirectories(barnConf.localLogDir)).iterator foreach { listDirs => {
+  loadConf(args) { barnConf => {
+
+    enableGanglia(barnConf.appName
+               , GangliaOpts(barnConf.gangliaHost
+                           , barnConf.gangliaPort))
+
+    continually(() => listSubdirectories(barnConf.localLogDir)).iterator
+      .foreach { listDirs => {
+
         listDirs().fold(logBarnError("List dirs in" + barnConf.localLogDir)
-               , syncRootLogDir(barnConf))
+                      , syncRootLogDir(barnConf))
 
         Thread.sleep(1000) //Replace me with iNotify
       }
     }
-  }
+  }}
 
   def syncRootLogDir(barnConf: BarnConf)(dirs: List[Dir])
   : Unit = dirs match {

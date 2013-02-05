@@ -25,7 +25,11 @@ trait ParamParser
       booleanOpt("p", "run-parallel", "<bool>", "ship service logs in parallel. (default: false)")
           {(v: Boolean, c: BarnConf) => c.copy(runParallel = v)},
       intOpt("i", "ship-interval", "<int>", "How often to ship each service's logs. (sefault: 3600 s)")
-          {(v: Int, c: BarnConf) => c.copy(shipInterval = v)}
+          {(v: Int, c: BarnConf) => c.copy(shipInterval = v)},
+      opt("ganglia-host", "Enables and specifies ganglia host")
+          {(v: String, c: BarnConf) => c.copy(gangliaHost = v)},
+      intOpt("ganglia-port", "Specifies ganglia port")
+          {(v: Int, c: BarnConf) => c.copy(gangliaPort = v)}
     )
   }
 
@@ -36,12 +40,20 @@ trait ParamParser
               (body: BarnConf => Unit)
   : Unit = {
 
-    val barnConfDefault = BarnConf(null,null,null,null,false,3600)
+    val barnConfDefault = BarnConf(null
+                                 , null
+                                 , null
+                                 , null
+                                 , false
+                                 , 3600
+                                 , null
+                                 , -1)
 
     parser.parse(args, barnConfDefault) map { config =>
 
       if(config.localLogDir == null || config.localTempDir == null ||
-         config.hdfsLogDir == null || config.hdfsEndpoint == null)
+         config.hdfsLogDir == null || config.hdfsEndpoint == null ||
+         config.gangliaHost == null || config.gangliaPort == -1)
         parser.showUsage
       else
         body(config)
