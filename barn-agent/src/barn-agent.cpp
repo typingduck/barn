@@ -35,14 +35,14 @@ bool sync_files(const BarnConf& barn_conf) {
   auto candidates = get_rsync_candidates(rsync_output.second);
   sort(candidates.begin(), candidates.end());
 
-  for(string& str : candidates)
-    cout << str << endl;
+  for(vector<string>::const_iterator it = candidates.begin(); it < candidates.end(); ++ it)
+    cout << *it << endl;
 
-  for(string& str : candidates) {
-    cout << "Candidate on " + barn_conf.rsync_source + " is " + str << endl;
+  for(vector<string>::const_iterator it = candidates.begin(); it < candidates.end(); ++ it) {
+    cout << "Candidate on " + barn_conf.rsync_source + " is " + *it << endl;
     string rsync_command = "rsync "
                          + rsync_initials + space
-                         + barn_conf.rsync_source + path_separator + str + space
+                         + barn_conf.rsync_source + path_separator + *it + space
                          + rsync_target;
 
     if(run_command(rsync_command).first != 0) {
