@@ -8,6 +8,7 @@ default : dist
 build : default
 
 dist : $(DEB)
+	g++ -std=c++0x ./src/*.cpp -o barn-agent
 
 clean :
 	rm -rf build
