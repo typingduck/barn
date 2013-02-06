@@ -89,14 +89,16 @@ object BarnHdfsWriter
                                 , minMB)
     } yield ()
 
-    result ||| logBarnError("Sync of " + serviceDir + "")
-    result ||| reportError
+    result ||| reportError("Sync of " + serviceDir + "")
 
     }
   }
 
-  def reportError(e: BarnError) = e match {
-    case _ : BarnFatalError => reportFatalError
+  def reportError(context: String)(e: BarnError) = e match {
+    case _ : BarnFatalError => {
+      logBarnError(context)(e)
+      reportFatalError
+    }
     case _ => ()
   }
 
