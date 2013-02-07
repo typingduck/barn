@@ -2,6 +2,11 @@
 
 using namespace std;
 
+const std::string get_host_name() {
+  string command_output = run_command("hostname -f").second;
+  return command_output.substr(0, command_output.size()-1);
+}
+
 //Run a command, grabs its stdout and exit status
 //This is not particularly the best way to do this
 //Since it relies on the system shell interpreter

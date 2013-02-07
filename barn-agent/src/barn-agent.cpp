@@ -7,11 +7,13 @@
 #include "barn-agent.h"
 #include "process.h"
 #include "rsync.h"
+#include "files.h"
+#include "helpers.h"
 
 using namespace std;
 
 bool sync_files(const BarnConf& barn_conf) {
-  static const auto host_name = run_command("hostname -f").second; //TODO: make me better
+  static const auto host_name = get_host_name(); //TODO: make me better
   const auto rsync_initials = rsync_flags + space + rsync_exclusions;
 
   const auto rsync_target = "rsync://" + barn_conf.barn_rsync_addr
@@ -20,10 +22,16 @@ bool sync_files(const BarnConf& barn_conf) {
                             + barn_conf.category + token_separator
                             + host_name + path_separator;
 
+  const auto exclude_file_list = prepend_each(
+                          choose_earliest_subset(list_files(barn_conf.rsync_source)),
+                          " --exclude=");
+
+  const auto concatted_exclude_file_list = accumulate(exclude_file_list.begin(), exclude_file_list.end(), string(" "));
+
   const auto rsync_dry_run = "rsync --dry-run "
                              + rsync_initials + space
-                             + barn_conf.rsync_source + "/*" + space
-                             + rsync_target;
+                             + concatted_exclude_file_list + space + barn_conf.rsync_source + "/*" +
+                             + space + rsync_target;
 
   const auto rsync_output = run_command(rsync_dry_run);
 

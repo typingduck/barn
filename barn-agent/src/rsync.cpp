@@ -1,19 +1,30 @@
 #include "rsync.h"
-#include <sstream>
+#include "helpers.h"
 #include <vector>
+#include <string>
+#include <algorithm>
 
 using namespace std;
 
+const vector<string> choose_earliest_subset(vector<string> file_names) {
+  sort(file_names.begin(), file_names.end());
+
+  const int last = file_names.size();
+  const int middle = file_names.size() / 2;
+
+  return vector<string>(&file_names[middle], &file_names[last]);
+}
+
 const vector<string> get_rsync_candidates(string rsync_output) {
-  std::stringstream stream(rsync_output);
-  vector<string> candidates;
-  while(!stream.eof()) {
-    std::string line;
-    getline(stream, line, '\n');
-    if(line[0] == '@') {
-      candidates.push_back(line);
+  const auto lines = split(rsync_output, '\n');
+  vector<string> svlogd_files;
+
+  for(vector<string>::const_iterator it = lines.begin(); it < lines.end(); ++it) {
+    if((*it)[0] == '@') {
+      svlogd_files.push_back(*it);
     }
   }
-  return candidates;
+
+  return svlogd_files;
 }
 
