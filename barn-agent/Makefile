@@ -3,14 +3,15 @@
 VERSION := 0.5.5
 DEB := barn-agent_$(VERSION)_all.deb
 
-default : dist
+default : build
 
-build : default
-
-dist : $(DEB)
+build :
 	g++ -std=c++0x ./src/*.cpp -o barn-agent
 
+dist : build $(DEB)
+
 clean :
+	rm barn-agent
 	rm -rf build
 	rm -f *.deb
 
@@ -18,7 +19,7 @@ $(DEB) :
 	@echo "Building agent .deb..."
 	$(MAKE) fpm
 	mkdir -p build/usr/local/bin/
-	cp barn-* build/usr/local/bin
+	cp barn-agent build/usr/local/bin
 	fpm -C build \
 			-s dir -t deb \
 			-v $(VERSION) \
