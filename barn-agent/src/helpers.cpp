@@ -30,3 +30,11 @@ const vector<string> prepend_each(vector<string> vec, string prefix) {
   return new_vec;
 
 }
+
+bool contained(vector<string> small, vector<string> big) {
+  bool valid = true;
+  for(vector<string>::iterator it = small.begin(); it < small.end(); ++it)
+    valid &= std::find(big.begin(), big.end(), *it) != big.end();
+  return valid;
+}
+

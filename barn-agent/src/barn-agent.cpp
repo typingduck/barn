@@ -14,13 +14,6 @@
 
 using namespace std;
 
-bool contained(vector<string> small, vector<string> big) {
-  bool valid = true;
-  for(vector<string>::iterator it = small.begin(); it < small.end(); ++it)
-    valid &= std::find(big.begin(), big.end(), *it) != big.end();
-  return valid;
-}
-
 bool sync_files(const BarnConf& barn_conf) {
   static const auto host_name = get_host_name(); //TODO: make me better
   const auto rsync_initials = rsync_flags + space + rsync_exclusions;
