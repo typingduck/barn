@@ -43,6 +43,9 @@ bool sync_files(const BarnConf& barn_conf) {
   auto candidates = get_rsync_candidates(rsync_output.second);
   sort(candidates.begin(), candidates.end());
 
+  if(candidates.size() == 0)
+    return false;
+
   for(vector<string>::const_iterator it = candidates.begin(); it < candidates.end(); ++ it)
     cout << *it << endl;
 
@@ -64,7 +67,7 @@ bool sync_files(const BarnConf& barn_conf) {
 
 bool sleep_it(const BarnConf& barn_conf)  {
   cout << "Sleeping..." << endl;
-  run_command("inotifywait " + inotify_exclusions + " --timeout 3600 -q -e close_write " + barn_conf.rsync_source + "/");
+  run_command("inotifywait " + inotify_exclusions + " --timeout 3600 -q -e moved_to " + barn_conf.rsync_source + "/");
 }
 
 

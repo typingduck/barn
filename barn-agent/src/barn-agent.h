@@ -12,7 +12,7 @@ const auto path_separator = "/";
 const std::string rsync_flags = "-c --verbose";
 const auto rsync_exclusions = "--exclude=*.u --exclude=config --exclude=current --exclude=lock --exclude=*~";
 const auto remote_rsync_namespace = "barn_logs";
-const std::string inotify_exclusions = "--exclude '\\.u' --exclude 'lock' --exclude 'current' --exclude '*~'";
+const std::string inotify_exclusions = "--exclude '\\.u' --exclude 'lock' --exclude 'current'";
 
 struct BarnConf {
   std::string barn_rsync_addr;
