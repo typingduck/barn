@@ -3,6 +3,7 @@
 #include "files.h"
 #include "process.h"
 #include "helpers.h"
+#include <unistd.h>
 
 using namespace std;
 
@@ -12,4 +13,6 @@ vector<string> list_files(string path) {
   return split(ls_result.second, '\n');
 }
 
-
+bool file_exists(std::string path) {
+  return access( path.c_str(), F_OK ) != -1;
+}

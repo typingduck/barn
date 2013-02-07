@@ -6,11 +6,6 @@
 
 using namespace std;
 
-const vector<string> choose_earliest_subset(vector<string> file_names) {
-  vector<string> empty;
-  return empty;
-}
-
 const vector<string> get_rsync_candidates(string rsync_output) {
   const auto lines = split(rsync_output, '\n');
   vector<string> svlogd_files;
