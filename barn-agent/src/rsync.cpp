@@ -7,12 +7,8 @@
 using namespace std;
 
 const vector<string> choose_earliest_subset(vector<string> file_names) {
-  sort(file_names.begin(), file_names.end());
-
-  const int last = file_names.size() - 2;
-  const int middle = (file_names.size() - 2) / 2;
-
-  return vector<string>(&file_names[0], &file_names[middle]);
+  vector<string> empty;
+  return empty;
 }
 
 const vector<string> get_rsync_candidates(string rsync_output) {
