@@ -17,9 +17,8 @@ const vector<string> split(string str, char delim) {
 const vector<string> prepend_each(vector<string> vec, string prefix) {
   vector<string> new_vec;
 
-  for(vector<string>::const_iterator it = vec.begin(); it < vec.end(); ++it) {
-    new_vec.push_back(prefix + *it);
-  }
+  for(string& el : vec)
+    new_vec.push_back(prefix + el);
 
   return new_vec;
 
@@ -27,8 +26,11 @@ const vector<string> prepend_each(vector<string> vec, string prefix) {
 
 bool contained(vector<string> small, vector<string> big) {
   bool valid = true;
-  for(vector<string>::iterator it = small.begin(); it < small.end(); ++it)
-    valid &= std::find(big.begin(), big.end(), *it) != big.end();
+
+  //TODO not efficient, make me better.
+  for(string& el : small)
+    valid &= std::find(big.begin(), big.end(), el) != big.end();
+
   return valid;
 }
 
