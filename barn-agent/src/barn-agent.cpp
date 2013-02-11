@@ -42,9 +42,9 @@ bool sync_files(const BarnConf& barn_conf) {
   if(candidates.size() == 0)
     return false;
 
-  for(vector<string>::const_iterator it = candidates.begin(); it < candidates.end(); ++ it) {
-    cout << "Syncing " + *it + " on " + barn_conf.rsync_source << endl;
-    const auto file_name = barn_conf.rsync_source + path_separator + *it;
+  for(const string& el : candidates) {
+    cout << "Syncing " + el + " on " + barn_conf.rsync_source << endl;
+    const auto file_name = barn_conf.rsync_source + path_separator + el;
 
     string rsync_command = "rsync "
                          + rsync_initials + space
