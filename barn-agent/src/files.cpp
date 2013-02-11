@@ -4,15 +4,22 @@
 #include "process.h"
 #include "helpers.h"
 #include <unistd.h>
+#include <boost/filesystem.hpp>
 
 using namespace std;
+namespace fs = boost::filesystem;
 
-//TODO make me better. ls isn't nice but alternatives without boost are complicated atm.
-vector<string> list_files(string path) {
-  const pair<bool, string> ls_result = run_command("ls " + path + " | cat");
-  return split(ls_result.second, '\n');
+vector<string> list_files(string path_) {
+  const fs::path path(path_);
+  const fs::directory_iterator end;
+  vector<string> file_names;
+
+  for(fs::directory_iterator it(path); it != end ; ++it)
+    file_names.push_back(it->path().filename().string());
+
+  return file_names;
 }
 
-bool file_exists(std::string path) {
-  return access( path.c_str(), F_OK ) != -1;
+bool file_exists(std::string path_) {
+  return fs::exists(fs::path(path_));
 }
