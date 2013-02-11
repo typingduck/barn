@@ -3,22 +3,16 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
 const vector<string> split(string str, char delim) {
-  std::stringstream stream(str);
-  vector<string> elements;
-  while(!stream.eof()) {
-    std::string line;
-    getline(stream, line, delim);
-
-    if(!stream.eof() || line != "")
-      elements.push_back(line);
-  }
-  return elements;
+  vector<string> tokens;
+  boost::split(tokens, str, boost::is_any_of(string(1, delim)));
+  return tokens;
 }
-
 
 const vector<string> prepend_each(vector<string> vec, string prefix) {
   vector<string> new_vec;
