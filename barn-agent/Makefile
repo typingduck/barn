@@ -1,3 +1,6 @@
+# Please make sure CPLUS_INCLUDE_PATH includes boost's include path and
+# LIBRARY_PATH includes boost's library path.
+
 .PHONY: build dist clean fpm
 
 VERSION := 0.5.5
@@ -6,7 +9,7 @@ DEB := barn-agent_$(VERSION)_all.deb
 default : build
 
 build :
-	g++ -std=c++0x ./src/*.cpp -o barn-agent
+	g++ -lboost_system -lboost_filesystem -std=c++0x ./src/*.cpp -O2 -Wall -o barn-agent
 
 dist : build $(DEB)
 
