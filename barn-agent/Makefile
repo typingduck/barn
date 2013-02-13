@@ -9,7 +9,7 @@ DEB := barn-agent_$(VERSION)_all.deb
 default : build
 
 build :
-	g++ -lboost_system -lboost_filesystem -std=c++0x ./src/*.cpp -O2 -Wall -o barn-agent
+	g++ -I./src/external/ -lboost_system -lboost_filesystem -lboost_thread -std=c++0x ./src/*.cpp -O2 -Wall -o barn-agent
 
 dist : build $(DEB)
 

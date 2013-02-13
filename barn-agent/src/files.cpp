@@ -15,6 +15,18 @@ vector<string> list_files(string path_) {
   vector<string> file_names;
 
   for(fs::directory_iterator it(path); it != end ; ++it)
+    file_names.push_back(it->path().string());
+
+  return file_names;
+}
+
+//TODO don't duplicate me!
+vector<string> list_file_names(string path_) {
+  const fs::path path(path_);
+  const fs::directory_iterator end;
+  vector<string> file_names;
+
+  for(fs::directory_iterator it(path); it != end ; ++it)
     file_names.push_back(it->path().filename().string());
 
   return file_names;

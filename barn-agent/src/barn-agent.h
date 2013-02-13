@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <boost/assign/list_of.hpp>
 
 #ifndef BARN_AGENT_H
 #define BARN_AGENT_H
@@ -8,11 +9,7 @@ const auto space = " ";
 const auto token_separator = "@";
 const auto path_separator = "/";
 
-//TODO Make us configurable
-const std::string rsync_flags = "-t --verbose";
-const auto rsync_exclusions = "--exclude=*.u --exclude=config --exclude=current --exclude=lock --exclude=*~";
 const auto remote_rsync_namespace = "barn_logs";
-const std::string inotify_exclusions = "--exclude '\\.u' --exclude 'lock' --exclude 'current'";
 
 struct BarnConf {
   std::string barn_rsync_addr;
