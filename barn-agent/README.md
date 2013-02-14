@@ -30,3 +30,6 @@ Barn Agent is written in C++ and requires the following dependencies:
 
 ```
 ./barn-agent BARN_MASTER_HOST:PORT LOCAL_LOG_DIRECTORY NAME_OF_SERVICE CATEGORY
+```
+
+####### Barn Agent is a part of the Barn package and Barn's LICENSE applies.
