@@ -21,16 +21,17 @@ const vector<string> prepend_each(vector<string> vec, string prefix) {
     new_vec.push_back(prefix + el);
 
   return new_vec;
-
 }
 
-bool contained(vector<string> small, vector<string> big) {
-  bool valid = true;
+
+//Returns the number of elements from small missing in big
+int count_missing(vector<string> small, vector<string> big) {
+  int invalid = 0;
 
   //TODO not efficient, make me better.
   for(string& el : small)
-    valid &= std::find(big.begin(), big.end(), el) != big.end();
+    invalid += std::find(big.begin(), big.end(), el) == big.end();
 
-  return valid;
+  return invalid;
 }
 

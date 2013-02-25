@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include "process.h"
 
 using namespace std;
 
@@ -19,3 +20,12 @@ const vector<string> get_rsync_candidates(string rsync_output) {
   return svlogd_files;
 }
 
+const std::string get_rsync_target(const BarnConf& barn_conf) {
+  static const auto host_name = get_host_name(); //TODO: make me better
+
+  return rsync_protocol + barn_conf.barn_rsync_addr
+       + path_separator + remote_rsync_namespace
+       + path_separator + barn_conf.service_name
+       + token_separator + barn_conf.category
+       + token_separator + host_name + path_separator;
+}
