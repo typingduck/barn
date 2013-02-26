@@ -1,12 +1,14 @@
-#include "barn-agent.h"
-
 #include <boost/assign/list_of.hpp>
+#include <boost/variant.hpp>
+
 #include <iostream>
 #include <string>
+
+#include "barn-agent.h"
 #include "sighandle.h"
 #include "process.h"
-#include <boost/variant.hpp>
 #include "localreport.h"
+#include "ganglia.h"
 
 using namespace std;
 using namespace boost;
@@ -28,8 +30,11 @@ int main(int argc, char* argv[]) {
 }
 
 void barn_agent_local_monitor_main(const BarnConf& barn_conf){
+  const auto metric_group = "barn_agent";
   while(true) {
-    cout << receive_report(barn_conf.monitor_port).serialize() << endl;
+    const auto metric = receive_report(barn_conf.monitor_port);
+    report_ganglia(metric_group, metric.key, metric.value);
+    cout << metric.serialize() << endl;
   } //Have resisted the temptation of making this tail-recursive!
 }
 
