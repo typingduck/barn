@@ -31,8 +31,9 @@ template<typename T, typename SuccessFunc, typename FailureFunc>
 void fold(Validation<T> v,
           SuccessFunc success,
           FailureFunc failure) {
-  T* success_value = boost::get<T*>(v);
-  BarnError* error_value = boost::get<BarnError*>(v);
+
+  T* success_value = boost::get<T>(&v);
+  BarnError* error_value = boost::get<BarnError>(&v);
 
   if(success_value != 0)
     success(*success_value);
