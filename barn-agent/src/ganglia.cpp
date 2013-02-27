@@ -14,7 +14,8 @@ bool report_ganglia(std::string group,
 
   try {
     auto result = run_command(gmetric_command_name,
-                    list_of<string>("-n")(metric)
+                    list_of<string>(gmetric_command_name)
+				   ("-n")(metric)
                                    ("-g")(group)
                                    ("-v")(to_string(value))
                                    ("-t")(int_size_flag)
