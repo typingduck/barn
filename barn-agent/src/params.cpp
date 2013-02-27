@@ -26,15 +26,12 @@ const BarnConf parse_command_line(int argc, char* argv[]) {
           "additional sub-namespace per service")
         ("monitor_port,i", po::value<int>(&conf.monitor_port),
           "additional sub-namespace per service")
-        ("monitor_mode",
+        ("monitor_mode", po::value<bool>(&conf.monitor_mode)->default_value(false),
           "Listens on udp://localhost:monitor_port/. In this mode the rest of options are unused.");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-
-    if(!vm["monitor_mode"].empty())
-      conf.monitor_mode = true;
 
     bool show_desc = false;
 
