@@ -52,7 +52,14 @@ void execute_single_sync_round(const BarnConf barn_conf, FileNameList file_name_
     file_name_list.size()));
 
   fold(ship_candidates(file_name_list, barn_conf),
-    [&](ShipStatistics ship_statistics) { ship_statistics.num_shipped || sleep_it(barn_conf); },
+    [&](ShipStatistics ship_statistics) {
+      send_report(barn_conf.monitor_port,
+        Report(barn_conf.service_name,
+          barn_conf.category, RotatedDuringShip,
+          ship_statistics.num_rotated_during_ship));
+
+      ship_statistics.num_shipped || sleep_it(barn_conf);
+    },
     [&](BarnError error) {
       cout << "Error:" << error << endl;
       sleep_it(barn_conf);

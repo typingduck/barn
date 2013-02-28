@@ -9,10 +9,11 @@
 
 const std::string FilesToShip("files_to_ship");
 const std::string FailedToGetSyncList("failed_to_get_sync_list");
+const std::string RotatedDuringShip("rotated_during_ship");
 
 //These metrics will be published as zero if not occured
 const std::vector<std::string> DefaultZeroMetrics =
-  boost::assign::list_of(FilesToShip)(FailedToGetSyncList);
+  boost::assign::list_of(FilesToShip)(FailedToGetSyncList)(RotatedDuringShip);
 
 class Report {
   public:
