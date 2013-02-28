@@ -7,7 +7,7 @@
 #include <string>
 
 const std::string FilesToShip("files_to_ship");
-const std::string FilesToGetSyncList("files_to_get_sync_list");
+const std::string FailedToGetSyncList("failed_to_get_sync_list");
 
 class Report {
   public:

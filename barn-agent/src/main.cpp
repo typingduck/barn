@@ -51,7 +51,7 @@ void handle_failure_in_sync_round(const BarnConf barn_conf, BarnError error) {
   cout << "Error:" << error << endl;
 
   send_report(barn_conf.monitor_port,
-    Report(barn_conf.service_name, barn_conf.category, FilesToGetSyncList, 1));
+    Report(barn_conf.service_name, barn_conf.category, FailedToGetSyncList, 1));
 
   sleep_it(barn_conf);
 }
