@@ -31,6 +31,7 @@ $(DEB) :
 			-d bash \
 			-d rsync \
 			-d inotify-tools \
+			-d ganglia-monitor \
 			./usr/local/bin/barn-agent
 
 fpm :
