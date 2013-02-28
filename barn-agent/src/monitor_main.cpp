@@ -22,6 +22,11 @@ map<string, int> aggregate(boost::circular_buffer<pair<string,int>> buffer);
 const int report_interval = 30; //seconds
 const int max_metrics_per_interval = 1000;
 
+void addDefaultMetrics(MetricRepo& metrics) {
+  for(auto& el : DefaultZeroMetrics)
+    metrics.push_back(make_pair(el, 0));
+}
+
 void timer_action(Timer* timer, MetricRepo* metrics, boost::mutex* repo_mutex){
   MetricRepo metrics_copy;
 
@@ -29,6 +34,7 @@ void timer_action(Timer* timer, MetricRepo* metrics, boost::mutex* repo_mutex){
     boost::mutex::scoped_lock lock(*repo_mutex);
     metrics_copy = *metrics;
     metrics->clear();
+    addDefaultMetrics(*metrics);
   }
 
   for(auto &m : aggregate(metrics_copy)) {
@@ -43,6 +49,7 @@ void timer_action(Timer* timer, MetricRepo* metrics, boost::mutex* repo_mutex){
 void barn_agent_local_monitor_main(const BarnConf& barn_conf){
 
   auto metrics = MetricRepo(max_metrics_per_interval);
+  addDefaultMetrics(metrics);
   boost::mutex mutex;
 
   io_service io;

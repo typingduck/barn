@@ -5,9 +5,14 @@
 #include <ctime>
 #include <iostream>
 #include <string>
+#include <boost/assign/list_of.hpp>
 
 const std::string FilesToShip("files_to_ship");
 const std::string FailedToGetSyncList("failed_to_get_sync_list");
+
+//These metrics will be published as zero if not occured
+const std::vector<std::string> DefaultZeroMetrics =
+  boost::assign::list_of(FilesToShip)(FailedToGetSyncList);
 
 class Report {
   public:
