@@ -49,7 +49,6 @@ void timer_action(Timer* timer, MetricRepo* metrics, boost::mutex* repo_mutex){
 void barn_agent_local_monitor_main(const BarnConf& barn_conf){
 
   auto metrics = MetricRepo(max_metrics_per_interval);
-  addDefaultMetrics(metrics);
   boost::mutex mutex;
 
   io_service io;
