@@ -24,7 +24,7 @@ const std::string Report::serialize() const {
       << value;
 
   return oss.str();
-};
+}
 
 Report Report::deserialize(const std::string& serialized) {
   std::istringstream iss(serialized);
@@ -40,7 +40,7 @@ Report Report::deserialize(const std::string& serialized) {
       >> value;
 
   return Report(service_name, category, key, value);
-};
+}
 
 void send_datagram(int port, std::string message) {
   using namespace boost;
