@@ -3,7 +3,7 @@
 
 .PHONY: build dist clean fpm
 
-VERSION := 0.5.7
+VERSION := 0.5.8
 DEB := barn-agent_$(VERSION)_all.deb
 
 default : build
