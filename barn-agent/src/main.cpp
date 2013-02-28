@@ -7,15 +7,14 @@
 #include "barn-agent.h"
 #include "sighandle.h"
 #include "process.h"
+#include "monitor_main.h"
 #include "localreport.h"
-#include "ganglia.h"
 
 using namespace std;
 using namespace boost;
 
 void handle_failure_in_sync_round(BarnConf barn_conf, BarnError error);
 void execute_single_sync_round(BarnConf barn_conf, FileNameList file_name_list);
-void barn_agent_local_monitor_main(const BarnConf& barn_conf);
 void barn_agent_main(const BarnConf& barn_conf);
 
 int main(int argc, char* argv[]) {
@@ -27,15 +26,6 @@ int main(int argc, char* argv[]) {
     barn_agent_local_monitor_main(barn_conf)
  :
     barn_agent_main(barn_conf);
-}
-
-void barn_agent_local_monitor_main(const BarnConf& barn_conf){
-  const auto metric_group = "barn_agent";
-  while(true) {
-    const auto metric = receive_report(barn_conf.monitor_port);
-    report_ganglia(metric_group, metric.key, metric.value);
-    cout << metric.serialize() << endl;
-  } //Have resisted the temptation of making this tail-recursive!
 }
 
 void barn_agent_main(const BarnConf& barn_conf) {
