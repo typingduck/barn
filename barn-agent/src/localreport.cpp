@@ -68,3 +68,7 @@ string receive_datagram(int port) {
   return std::string(recv_buf.begin(), recv_buf.begin() + size_read);
 }
 
+std::pair<std::string, int> kv_pair(const Report& report) {
+  return std::make_pair(report.key, report.value);
+}
+
