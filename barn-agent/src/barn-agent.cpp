@@ -36,11 +36,12 @@ ship_candidates(vector<string> candidates, const BarnConf& barn_conf) {
 
   const int candidates_size = candidates.size();
 
-  if(!candidates_size) return ShipStatistics(0, 0);
+  if(!candidates_size) return ShipStatistics(0, 0, 0);
 
   sort(candidates.begin(), candidates.end());
 
   const auto rsync_target = get_rsync_target(barn_conf);
+  auto num_lost_during_ship(0);
 
   for(const string& el : candidates) {
     cout << "Syncing " + el + " on " + barn_conf.rsync_source << endl;
@@ -55,9 +56,10 @@ ship_candidates(vector<string> candidates, const BarnConf& barn_conf) {
     if(run_command("rsync", rsync_wet_run).first != 0) {
       cout << "ERROR: Rsync failed to transfer a log file." << endl;
 
-      if(!file_exists(file_name))
-        cout << "WARN: Couldn't ship log since it got rotated in the meantime" << endl;
-      else
+      if(!file_exists(file_name)) {
+        cout << "FATAL: Couldn't ship log since it got rotated in the meantime" << endl;
+        num_lost_during_ship += 1;
+      } else
         return BarnError("ERROR: Coudln't ship log possibly due to a network error");
     }
   }
@@ -68,7 +70,9 @@ ship_candidates(vector<string> candidates, const BarnConf& barn_conf) {
       count_missing(candidates, list_file_names(barn_conf.rsync_source))) != 0)
     cout << "DANGER: We're producing logs much faster than shipping." << endl;
 
-  return ShipStatistics(candidates_size, num_rotated_during_ship);
+  return ShipStatistics(candidates_size
+                      , num_rotated_during_ship
+                      , num_lost_during_ship);
 }
 
 bool sleep_it(const BarnConf& barn_conf)  {

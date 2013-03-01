@@ -51,12 +51,16 @@ struct BarnConf {
 };
 
 struct ShipStatistics {
-  ShipStatistics(int num_shipped, int num_rotated_during_ship)
+  ShipStatistics(int num_shipped
+               , int num_rotated_during_ship
+               , int num_lost_during_ship)
     :num_shipped(num_shipped),
-     num_rotated_during_ship(num_rotated_during_ship) {};
+     num_rotated_during_ship(num_rotated_during_ship),
+     num_lost_during_ship(num_lost_during_ship) {};
 
   int num_shipped;
   int num_rotated_during_ship;
+  int num_lost_during_ship;
 };
 
 bool sync_files(const BarnConf& barn_conf);
