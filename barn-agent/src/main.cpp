@@ -54,13 +54,17 @@ void execute_single_sync_round(const BarnConf barn_conf, FileNameList file_name_
   fold(ship_candidates(file_name_list, barn_conf),
     [&](ShipStatistics ship_statistics) {
 
-      send_report(barn_conf.monitor_port,
-        Report(barn_conf.service_name, barn_conf.category, RotatedDuringShip,
-          ship_statistics.num_rotated_during_ship));
+      cout << "DEBUG: " << " sending first alert" << endl;
 
-      send_report(barn_conf.monitor_port,
-        Report(barn_conf.service_name, barn_conf.category, LostDuringShip,
-          ship_statistics.num_lost_during_ship));
+      //TODO fix send_report
+      if(ship_statistics.num_lost_during_ship != 0)
+        send_report(barn_conf.monitor_port,
+          Report(barn_conf.service_name, barn_conf.category, LostDuringShip,
+            ship_statistics.num_lost_during_ship));
+      else
+        send_report(barn_conf.monitor_port,
+          Report(barn_conf.service_name, barn_conf.category, RotatedDuringShip,
+            ship_statistics.num_rotated_during_ship));
 
       ship_statistics.num_shipped || sleep_it(barn_conf);
     },
