@@ -8,7 +8,7 @@ import java.io.{FileInputStream, FileOutputStream}
 import scala.io.Source
 import org.apache.hadoop.io.{BytesWritable => BW, LongWritable => LW, SequenceFile}
 import org.apache.hadoop.conf.Configuration
-import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Decoder
 import scalaz._
 import Scalaz._
 import org.apache.commons.lang.RandomStringUtils
@@ -28,13 +28,25 @@ trait FileCombiner extends Logging {
     outputStream.close
   }
 
+  import java.nio.charset.{Charset, CharsetDecoder, CodingErrorAction}
+
+  def getUTF8Decoder : CharsetDecoder = {
+    val decoder = Charset.forName("UTF-8").newDecoder()
+    decoder.onMalformedInput(CodingErrorAction.REPLACE)
+    decoder.replaceWith("?")
+    return decoder
+  }
+
   //Combines local files into a local combined sequence file
   def combineIntoSeqFile(localFiles: List[File]
                        , outputFile: File
                        , f : String => Array[Byte]) = {
 
+    import java.io.{BufferedReader, InputStreamReader, FileInputStream}
+
     val conf = new Configuration
     val fs = FileSystem.getLocal(conf)
+    val decoder = getUTF8Decoder
 
     val outputWriter = SequenceFile.createWriter( fs
                          , conf
@@ -48,11 +60,14 @@ trait FileCombiner extends Logging {
     val bufferSize = 20 * 1024 * 1024
 
     localFiles.foreach( file => {
-      val bufferedSource = Source.fromFile(file, bufferSize)
+      val bufferedSource = new BufferedReader(
+                             new InputStreamReader(
+                               new FileInputStream(file), decoder)
+                           , bufferSize)
 
-      try bufferedSource.getLines.foreach( line =>
+      try while(bufferedSource.ready)
             outputWriter.append( new LW(System.currentTimeMillis())
-                               , new BW(f(line))))
+                               , new BW(f(bufferedSource.readLine)))
       finally bufferedSource.close
 
     })
@@ -64,7 +79,7 @@ trait FileCombiner extends Logging {
 
   val BASE64 = "base64"
   val syslogMatcher = "(?:^.*?\\[origin.*?x-encoding\\s*?=\\s*?\"\\s*(.*?)\\s*\".*?\\]\\s)?(.*)".r
-  val base64Decoder = new BASE64Decoder();
+  val base64Decoder = new BASE64Decoder()
 
   def processFormat(line: String) : Array[Byte]
   = syslogMatcher.findFirstMatchIn(line) match {
@@ -85,18 +100,18 @@ trait FileCombiner extends Logging {
       " Candidates to combine: " + candidates)
 
 
-  import org.apache.hadoop.io.compress.CompressionCodec;
+  import org.apache.hadoop.io.compress.CompressionCodec
 
   def compressionCodec : CompressionCodec = {
-    import org.apache.hadoop.io.compress.DefaultCodec;
-    import org.apache.hadoop.io.compress.SnappyCodec;
-    import org.apache.hadoop.io.compress.snappy.LoadSnappy;
+    import org.apache.hadoop.io.compress.DefaultCodec
+    import org.apache.hadoop.io.compress.SnappyCodec
+    import org.apache.hadoop.io.compress.snappy.LoadSnappy
 
     if (LoadSnappy.isLoaded) {
       new SnappyCodec()
     } else {
       warn("Snappy codec isn't loaded. Using the default compression codec")
-      new DefaultCodec();
+      new DefaultCodec()
     }
   }
 
