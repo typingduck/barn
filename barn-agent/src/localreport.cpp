@@ -54,7 +54,7 @@ void send_datagram(int port, std::string message) {
   socket.send_to(boost::asio::buffer(message.c_str(), message.size()), end_point);
 }
 
-template<int buffer_size = 100>
+template<int buffer_size>
 string receive_datagram(int port) {
   using namespace boost;
   using namespace boost::asio;

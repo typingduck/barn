@@ -50,7 +50,7 @@ Report receive_report(int port);
 
 void send_datagram(int port, std::string message);
 
-template<int buffer_size = 50>
+template<int buffer_size = 250>
 std::string receive_datagram(int port);
 
 std::pair<std::string, int> kv_pair(const Report& report);
