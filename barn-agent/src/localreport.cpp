@@ -4,6 +4,7 @@
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <sstream>
+#include <boost/bind.hpp>
 
 using namespace std;
 
@@ -11,8 +12,8 @@ void send_report(int port, const Report& report) {
   send_datagram(port, report.serialize());
 }
 
-Report receive_report(int port) {
-  return Report::deserialize(receive_datagram(port));
+void receive_reports(int port, function<void(const Report&)> handler) {
+  receive_datagrams(port, bind(handler, bind(Report::deserialize, _1)));
 }
 
 const std::string Report::serialize() const {
@@ -55,7 +56,7 @@ void send_datagram(int port, std::string message) {
 }
 
 template<int buffer_size>
-string receive_datagram(int port) {
+void receive_datagrams(int port, function<void(const string&)> handler) {
   using namespace boost;
   using namespace boost::asio;
   using namespace boost::asio::ip;
@@ -64,8 +65,12 @@ string receive_datagram(int port) {
   udp::socket socket(io_service, udp::endpoint(udp::v4(), port));
   boost::array<char, buffer_size> recv_buf;
   udp::endpoint remote_endpoint;
-  auto size_read = socket.receive_from(buffer(recv_buf), remote_endpoint);
-  return std::string(recv_buf.begin(), recv_buf.begin() + size_read);
+
+  while(true) {
+    auto size_read = socket.receive_from(buffer(recv_buf), remote_endpoint);
+    std::string datagram(recv_buf.begin(), recv_buf.begin() + size_read);
+    handler(datagram);
+  }
 }
 
 std::pair<std::string, int> kv_pair(const Report& report) {

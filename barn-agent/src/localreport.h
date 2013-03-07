@@ -46,12 +46,12 @@ class Report {
 };
 
 void send_report(int port, const Report& report);
-Report receive_report(int port);
+void receive_reports(int port, std::function<void(const Report&)> handler);
 
 void send_datagram(int port, std::string message);
 
 template<int buffer_size = 250>
-std::string receive_datagram(int port);
+void receive_datagrams(int port, std::function<void(const std::string&)> handler);
 
 std::pair<std::string, int> kv_pair(const Report& report);
 
