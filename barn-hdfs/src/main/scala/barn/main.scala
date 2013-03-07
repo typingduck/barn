@@ -33,10 +33,13 @@ object BarnHdfsWriter
     continually(() => listSubdirectories(barnConf.localLogDir)).iterator
       .foreach { listDirs => {
 
+        info("Round of sync started.")
+
         listDirs().fold(logBarnError("List dirs in" + barnConf.localLogDir)
                       , syncRootLogDir(barnConf))
 
-        Thread.sleep(1000) //Replace me with iNotify
+        info("Round of sync finished. Sleeping.")
+        Thread.sleep(600000) //Replace me with iNotify //TODO make me config'able
       }
     }
   }}
