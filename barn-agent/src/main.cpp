@@ -22,10 +22,9 @@ int main(int argc, char* argv[]) {
 
  install_signal_handler();
 
- barn_conf.monitor_mode ?
-    barn_agent_local_monitor_main(barn_conf)
- :
-    barn_agent_main(barn_conf);
+ barn_conf.monitor_mode
+  ? barn_agent_local_monitor_main(barn_conf)
+  : barn_agent_main(barn_conf);
 }
 
 void barn_agent_main(const BarnConf& barn_conf) {
