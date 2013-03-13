@@ -92,7 +92,7 @@ object BarnHdfsWriter
                                 , minMB)
     } yield ()
 
-    result ||| reportError("Sync of " + serviceDir + "")
+    result ||| (reportError("Sync of " + serviceDir + "") _).fail
 
     }
   }
@@ -106,9 +106,12 @@ object BarnHdfsWriter
   }
 
   def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)
-  : Validation[BarnError, DateTime]
-   = inceptRight(localFiles.headOption.map(svlogdFileTimestamp))
-      .map(_ getOrElse DateTime.now.minusDays(defaultLookBackDays))
+  : Validation[BarnError, DateTime] = {
+    localFiles.headOption match {
+      case Some(f) => svlogdFileTimestamp(f)
+      case None => DateTime.now.minusDays(defaultLookBackDays).success
+    }
+  }
 
   def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String])
   : Validation[BarnError, List[File]]

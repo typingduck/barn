@@ -82,8 +82,4 @@ package object barn {
     }
   }
 
-  def inceptRight[A,B](v: Option[Validation[A,B]])
-  : Validation[A, Option[B]]
-  = v.fold(_.fold(_.fail,_.some.success), None.success)
-
 }

@@ -9,7 +9,7 @@ organization := "com.soundcloud"
 
 // FIXME: twitter's sbt-package-dist is only available for sbt 0.11.x + scala
 // 2.9.1
-scalaVersion := "2.9.1"
+scalaVersion := "2.10.0"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-explaintypes", "-optimize")
 
@@ -17,6 +17,8 @@ resolvers := Seq(
   "SC Hosted" at "http://maven.int.s-cloud.net/content/groups/hosted"
 , "SC Proxy"  at "http://maven.int.s-cloud.net/content/groups/proxy"
 , "sonatype-public" at "https://oss.sonatype.org/content/groups/public"
+, "snapshots" at "http://oss.sonatype.org/content/repositories/snapshots"
+, "releases"  at "http://oss.sonatype.org/content/repositories/releases"
 )
 
 libraryDependencies := Seq(
@@ -25,12 +27,13 @@ libraryDependencies := Seq(
 , "org.apache.hadoop" %  "hadoop-core"  % "0.20.2-cdh3u1"
 , "commons-io"        %  "commons-io"   % "2.4"
 , "commons-lang"      %  "commons-lang" % "2.4"
-, "org.scalaz"        %% "scalaz-core"  % "6.0.4"
-, "org.scalatest"     %% "scalatest"    % "1.6.1"  % "test,slow"
+, "org.scalatest" % "scalatest_2.10" % "1.9.1"  % "test,slow"
 , "org.scalacheck"    %% "scalacheck"   % "1.10.0" % "test,slow"
-, "com.github.scopt"  %% "scopt"        % "2.1.0"
+, "org.scalaz" % "scalaz-core_2.10" % "7.0.0-M8"
 , "com.yammer.metrics" % "metrics-ganglia"  % "3.0.0.sc-SNAPSHOT"
-, "com.yammer.metrics" %% "metrics-scala"   % "3.0.0.sc-SNAPSHOT"
+, "com.yammer.metrics" % "metrics-scala_2.9.1"  % "3.0.0.sc-SNAPSHOT"
+, "org.scalatest" % "scalatest_2.10" % "1.9.1"
+, "com.github.scopt" % "scopt_2.10" % "2.1.0"
 )
 
 
