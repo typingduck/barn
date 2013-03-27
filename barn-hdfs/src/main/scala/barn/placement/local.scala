@@ -18,7 +18,7 @@ trait LocalPlacementStrategy
   : Validation[BarnError, LocalServiceInfo]
   = serviceDir.getName.split(delim) match {
     case Array(service, category, host) =>
-      LocalServiceInfo(service, category, host) success
+      LocalServiceInfo(service, host) success
     case _ => InvalidNameFormat("Failed to extract service info for " + serviceDir) fail
   }
 

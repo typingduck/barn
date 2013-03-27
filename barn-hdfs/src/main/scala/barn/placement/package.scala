@@ -3,7 +3,6 @@ package barn
 package object placement {
 
   case class LocalServiceInfo(serviceName: String
-                            , category: String
                             , hostName: String)
 
   case class ShippingPlan(hdfsDir: HdfsDir

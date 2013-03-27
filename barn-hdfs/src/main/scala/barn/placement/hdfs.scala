@@ -25,7 +25,6 @@ trait HdfsPlacementStrategy
   case class PlacedFileInfo(bucket   : DateBucket
                          , host     : String
                          , service  : String
-                         , category : String
                          , taistamp : String)
 
   def planNextShip(fs: HdfsFileSystem
@@ -76,13 +75,12 @@ trait HdfsPlacementStrategy
     val year = time.getYear
     val month = time.getMonthOfYear
     val date = time.getDayOfMonth
-    val pattern = "%04d,%02d,%02d,%s,%s,%s,%s.seq"
+    val pattern = "%04d,%02d,%02d,%s,%s,%s.seq"
     pattern.format(year
                  , month
                  , date
-                 , serviceInfo.hostName
                  , serviceInfo.serviceName
-                 , serviceInfo.category
+                 , serviceInfo.hostName
                  , taistamp)
   }
 
@@ -107,15 +105,15 @@ trait HdfsPlacementStrategy
   }
 
   private val hdfsFileMatcher =
-    "([0-9]{4}),([0-9]{2}),([0-9]{2}),(.*),(.*),(.*?),(.*).seq".r
+    "([0-9]{4}),([0-9]{2}),([0-9]{2}),(.*),(.*),(.*).seq".r
 
   def getPlacedFileInfo(hdfsFile: HdfsFile)
   : Validation[BarnError, PlacedFileInfo]
   = validate(
     hdfsFile.getName match {
-      case hdfsFileMatcher(year, month, day, host, service, category, taistamp) =>
+      case hdfsFileMatcher(year, month, day, service, host, taistamp) =>
         PlacedFileInfo(DateBucket(year.toInt, month.toInt, day.toInt)
-                                , host, service, category, taistamp) success
+                                , host, service, taistamp) success
       case _ => InvalidNameFormat("Invalid HdfsFile name format " + hdfsFile) fail
     }, "Invalid HdfsFile name format " + hdfsFile)
 

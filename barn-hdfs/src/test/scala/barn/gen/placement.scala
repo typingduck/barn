@@ -11,8 +11,7 @@ trait PlacementGenerators extends CommonGenerators {
   val genLocalServiceInfo = for {
     serviceName <- genNonEmptyAlphaNumStr
     hostName <- genHostName
-    category <- genNonEmptyAlphaNumStr
-  } yield LocalServiceInfo(serviceName, hostName, category)
+  } yield LocalServiceInfo(serviceName, hostName)
 
   val genShippingInterval = chooseNum(0, 172800)   //maximum 48 hours
 
