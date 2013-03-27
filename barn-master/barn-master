@@ -11,9 +11,9 @@ RSYNC_PORT=$1
 RSYNC_LOG_DIR=$2
 
 cat >$RSYNCD_CONF_NAME <<EOL
-log file = /tmp/rsyncd.log
-pid file = /tmp/rsyncd.pid
-lock file = /tmp/rsync.lock
+log file = /tmp/barn-rsyncd.log
+pid file = /tmp/barn-rsyncd.pid
+lock file = /tmp/barn-rsync.lock
 port = $RSYNC_PORT
 
 [barn_logs]

@@ -1,6 +1,6 @@
 .PHONY: build dist clean fpm
 
-VERSION := 0.5.5
+VERSION := 0.5.6
 DEB := barn-master_$(VERSION)_all.deb
 
 default : dist
