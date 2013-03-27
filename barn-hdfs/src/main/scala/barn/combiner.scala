@@ -39,8 +39,7 @@ trait FileCombiner extends Logging {
 
   //Combines local files into a local combined sequence file
   def combineIntoSeqFile(localFiles: List[File]
-                       , outputFile: File
-                       , f : String => Array[Byte]) = {
+                       , outputFile: File) = {
 
     import java.io.{BufferedReader, InputStreamReader, FileInputStream}
 
@@ -67,7 +66,7 @@ trait FileCombiner extends Logging {
 
       try while(bufferedSource.ready)
             outputWriter.append( new LW(System.currentTimeMillis())
-                               , new BW(f(bufferedSource.readLine)))
+                               , new BW(bufferedSource.readLine.getBytes))
       finally bufferedSource.close
 
     })
@@ -77,24 +76,13 @@ trait FileCombiner extends Logging {
 
   }
 
-  val BASE64 = "base64"
-  val syslogMatcher = "(?:^.*?\\[origin.*?x-encoding\\s*?=\\s*?\"\\s*(.*?)\\s*\".*?\\]\\s)?(.*)".r
-  val base64Decoder = new BASE64Decoder()
-
-  def processFormat(line: String) : Array[Byte]
-  = syslogMatcher.findFirstMatchIn(line) match {
-      case Some(syslogMatcher(BASE64,body)) => base64Decoder.decodeBuffer(body)
-      case Some(_) => line.getBytes
-      case None => throw new java.lang.Exception("Regexp match to extract body failed?? Come save me!") //FIXME
-    }
-
   def concatCandidates(candidates: List[File], targetDir: Dir)
   : Validation[BarnError, File] = validate ({
     val combinedName = RandomStringUtils.randomAlphanumeric(20)
     val combinedLocalFile = new File(targetDir, combinedName)
     info("Combining " + candidates.size + " ("+ candidates.head + " and ... )" +
       " into " + combinedLocalFile)
-    combineIntoSeqFile(candidates, combinedLocalFile, processFormat)
+    combineIntoSeqFile(candidates, combinedLocalFile)
     combinedLocalFile success
   } , "Can't combine files into a sequence file." +
       " Candidates to combine: " + candidates)
