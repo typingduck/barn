@@ -45,31 +45,4 @@ class HadoopSuite
     )
   }
 
-  test("should correctly find the first non-empty dir in a directory stream") {
-    check(
-      forAll(genHdfsDirStreamWithFiles) { case dirStream =>
-
-        val threshold = nextDouble
-        val filteredDirStream = dirStream.filter(_ => nextDouble < threshold)
-
-        val correctResult =
-          filteredDirStream.map(_._2).find { !_.isEmpty }.
-          getOrElse(List.empty[HdfsFile]).
-          map(_.getName).
-          toSet
-
-        havingTemporaryDirStructures(fs, filteredDirStream.toList) {
-          listFirstNonEmptyDir(fs, dirStream.map(_._1)) fold (
-            error => false :| "IO exception when listing files:" + error,
-            listedFiles => (listedFiles.map(_.getName).toSet ==
-                            correctResult) :|
-                            "Doesn't match. Got:" + listedFiles.map(_.getName)
-                                                  + " want "
-                                                  + correctResult
-          )
-        }
-      }
-    )
-  }
-
 }
