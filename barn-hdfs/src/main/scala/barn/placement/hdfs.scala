@@ -35,29 +35,49 @@ trait HdfsPlacementStrategy
   : Validation[BarnError, ShippingPlan] = {
 
     val hdfsTempDir = targetTempDir(baseHdfsDir)
-    val hdfsDirStream = targetDirs(DateTime.now
-                                 , baseHdfsDir
-                                 , lookBackLowerBound)
-    val hdfsDir = hdfsDirStream.head
+    val hdfsDirStream = targetDirs(DateTime.now, baseHdfsDir, lookBackLowerBound)
+
+    val targetHdfsDir = hdfsDirStream.head
+
+    val dirsWithRelevantHdfsFilesStream = for {
+        each           <- hdfsDirStream
+        relevantFiles  <- listHdfsFiles(fs, each) match {
+			      case Failure(FileNotFound(_)) => None
+			      case Failure(a) => Failure(a) some
+			      case Success(Nil) => None 
+			      case Success(a) => 
+				logsForService(serviceInfo, a) match {
+				  case Success(Nil) => None
+				  case otherwise => otherwise some
+				}
+			  }
+      } yield relevantFiles
 
     for {
-       _                    <- ensureHdfsDir(fs, hdfsDir)
+       _                    <- ensureHdfsDir(fs, targetHdfsDir)
        _                    <- ensureHdfsDir(fs, hdfsTempDir)
-       hdfsFiles            <- listFirstNonEmptyDir(fs, hdfsDirStream)
-       lastShippedTaistamp  <- getLastShippedTaistamp(hdfsFiles, serviceInfo)
+
+       hdfsFilesFileInfo    <- dirsWithRelevantHdfsFilesStream
+                                .headOption
+                                .getOrElse(List.empty[PlacedFileInfo].success)
+
+       lastShippedTaistamp   = getLastShippedTaistamp(hdfsFilesFileInfo, serviceInfo)
        lastShippedTimestamp  = lastShippedTaistamp.map(Tai64.convertTai64ToTime(_))
+
        _                    <- isShippingTime(lastShippedTimestamp, shipInterval)
-    } yield ShippingPlan(hdfsDir, hdfsTempDir, lastShippedTaistamp)
+    } yield ShippingPlan(targetHdfsDir, hdfsTempDir, lastShippedTaistamp)
+
   }
 
-  def getLastShippedTaistamp(hdfsFiles: List[HdfsFile], serviceInfo: LocalServiceInfo)
-  : Validation[BarnError, Option[String]]
-  = for {
-      hdfsFilesPlaceInfo <- collapseValidate(hdfsFiles.map(getPlacedFileInfo(_)))
-      hdfsFilesFiltered   = filter(hdfsFilesPlaceInfo, serviceInfo)
-      hdfsFilesSorted     = sorted(hdfsFilesFiltered, serviceInfo)
-      lastShippedFile     = hdfsFilesSorted.lastOption
-   } yield lastShippedFile map(_.taistamp)
+  def logsForService(serviceInfo: LocalServiceInfo,
+                     hdfsFiles: List[HdfsFile])
+  : Validation[BarnError, List[PlacedFileInfo]] = for {
+    hdfsFilesPlaceInfo <- collapseValidate(hdfsFiles map getPlacedFileInfo)
+    hdfsFilesFiltered   = filter(hdfsFilesPlaceInfo, serviceInfo)
+  } yield hdfsFilesFiltered
+
+  def getLastShippedTaistamp(hdfsFiles: List[PlacedFileInfo], serviceInfo: LocalServiceInfo)
+  : Option[String] = sorted(hdfsFiles, serviceInfo).lastOption.map(_.taistamp)
 
   def isShippingTime(lastShippedTimestamp: Option[DateTime], shippingInterval: Int)
   : Validation[BarnError, Unit]
