@@ -21,7 +21,7 @@ object BarnHdfsWriter
   with Instruments {
 
   val minMB = 10 //minimum megabytes to keep for each service!
-  val defaultLookBackDays = 10
+  val maxLookBackDays = 10
   val excludeList = List("""^\..*""") //Exclude files starting with dot (temp)
 
   loadConf(args) { barnConf => {
@@ -65,14 +65,14 @@ object BarnHdfsWriter
       serviceInfo <- decodeServiceInfo(serviceDir)
       fs          <- createFileSystem(barnConf.hdfsEndpoint)
       localFiles  <- listSortedLocalFiles(serviceDir, excludeList)
-      lookBack    <- earliestLookbackDate(localFiles, defaultLookBackDays)
+      lookBack    <- earliestLookbackDate(localFiles, maxLookBackDays)
       plan        <- planNextShip(fs
                                 , serviceInfo
                                 , barnConf.hdfsLogDir
                                 , barnConf.shipInterval
                                 , lookBack)
 
-      candidates  <- outstandingFiles(localFiles, plan lastTaistamp)
+      candidates  <- outstandingFiles(localFiles, plan lastTaistamp, maxLookBackDays)
       concatted   <- reportCombineTime(
                        concatCandidates(candidates, barnConf.localTempDir))
 
@@ -105,26 +105,41 @@ object BarnHdfsWriter
     case _ => ()
   }
 
-  def earliestLookbackDate(localFiles: List[File], defaultLookBackDays: Int)
+  def earliestLookbackDate(localFiles: List[File], maxLookBackDays: Int)
   : Validation[BarnError, DateTime] = {
+    val maxLookBackTime = DateTime.now.minusDays(maxLookBackDays)
+
     localFiles.headOption match {
-      case Some(f) => svlogdFileTimestamp(f)
-      case None => DateTime.now.minusDays(defaultLookBackDays).success
+      case Some(f) =>
+        svlogdFileTimestamp(f).map(ts =>
+          if(ts.isBefore(maxLookBackTime)) maxLookBackTime else ts)
+      case None => maxLookBackTime.success
     }
   }
 
-  def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String])
-  : Validation[BarnError, List[File]]
-  = lastTaistamp match {
-    case Some(taistamp) =>
-      localFiles dropWhile(f =>
-        svlogdFileNameToTaiString(f getName) <= taistamp) match {
-        case Nil => NothingToSync("No local files left to sync.") fail
-        case x => x success
-      }
-    case None => localFiles success  //All files are left to be synced
-  }
+  def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String], maxLookBackTime: Int)
+  : Validation[BarnError, List[File]] = {
+    val maxLookBackTime = DateTime.now.minusDays(maxLookBackDays).minusDays(1).toDateMidnight
 
+    lastTaistamp match {
+      case Some(taistamp) =>
+        localFiles dropWhile(f => {
+
+            val fileTaistring = svlogdFileNameToTaiString(f getName)
+
+            fileTaistring <= taistamp ||  //TODO Deduplicate me with the case below
+              Tai64.convertTai64ToTime(fileTaistring).isBefore(maxLookBackTime)
+
+          }) match {
+            case Nil => NothingToSync("No local files left to sync.") fail
+            case x => x success
+          }
+      case None => 
+	localFiles.dropWhile(f =>    //TODO Deduplicate me with the case above
+	  Tai64.convertTai64ToTime(
+	    svlogdFileNameToTaiString(f getName)).isBefore(maxLookBackTime)) success
+    }
+  }
 }
 
 
