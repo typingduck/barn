@@ -35,22 +35,22 @@ trait HdfsPlacementStrategy
   : Validation[BarnError, ShippingPlan] = {
 
     val hdfsTempDir = targetTempDir(baseHdfsDir)
-    val hdfsDirStream = targetDirs(DateTime.now, baseHdfsDir, lookBackLowerBound).take(6)
+    val hdfsDirStream = targetDirs(DateTime.now, baseHdfsDir, lookBackLowerBound)
 
     val targetHdfsDir = hdfsDirStream.head
 
     val dirsWithRelevantHdfsFilesStream = for {
         each           <- hdfsDirStream
-        listed          = listHdfsFiles(fs, each)
-        nonEmptyFolder  = listed if nonEmptyListPred(listed)
-        relevantFiles  <- nonEmptyFolder match {
-                            case Failure(a) => Failure(a).some
-                            case Success(a) =>
-                              logsForService(serviceInfo, a) match {
-                                case Success(Nil) => None
-                                case otherwise => otherwise.some
-                              }
-                          }
+        relevantFiles  <- listHdfsFiles(fs, each) match {
+			      case Failure(FileNotFound(_)) => None
+			      case Failure(a) => Failure(a) some
+			      case Success(Nil) => None 
+			      case Success(a) => 
+				logsForService(serviceInfo, a) match {
+				  case Success(Nil) => None
+				  case otherwise => otherwise some
+				}
+			  }
       } yield relevantFiles
 
     for {
@@ -75,13 +75,6 @@ trait HdfsPlacementStrategy
     hdfsFilesPlaceInfo <- collapseValidate(hdfsFiles map getPlacedFileInfo)
     hdfsFilesFiltered   = filter(hdfsFilesPlaceInfo, serviceInfo)
   } yield hdfsFilesFiltered
-
-  def nonEmptyListPred(el: Validation[BarnError, List[HdfsFile]]) : Boolean
-  = el match {
-    case Success(listOfFiles) => !listOfFiles.isEmpty
-    case Failure(FileNotFound(str)) => false
-    case Failure(_) => true
-  }
 
   def getLastShippedTaistamp(hdfsFiles: List[PlacedFileInfo], serviceInfo: LocalServiceInfo)
   : Option[String] = sorted(hdfsFiles, serviceInfo).lastOption.map(_.taistamp)
