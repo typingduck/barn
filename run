@@ -1,0 +1,18 @@
+#!/bin/bash
+
+exec 2>&1
+
+LD_LIBRARY_PATH=/usr/lib/hadoop/lib/native/Linux-amd64-64/:$LD_LIBRARY_PATH \
+exec /opt/jre1.6.0_39/bin/java \
+         -jar ./barn-hdfs/dist/barn-hdfs-0.1.20/barn-hdfs-0.1.20.jar \
+         --local-log-dir /home/omid/barn-test-data/ \
+         --local-temp-dir /home/omid/barn-test-data/tmp \
+         --hdfs-log-dir /user/omid/barn-test-production \
+         --hdfs hdfs://ams-hdn001.int.s-cloud.net:8020 \
+         --ship-interval 1 \
+         --run-parallel true \
+         --ganglia-host 178.249.137.49 \
+         --ganglia-port 8649
+
+
+
