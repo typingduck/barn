@@ -17,7 +17,7 @@ const auto remote_rsync_namespace = "barn_logs";
 const auto rsync_exclusions = prepend_each(
   boost::assign::list_of<std::string>("*.u")("config")("current")("lock")("*~"), "--exclude=");
 
-const auto rsync_flags = boost::assign::list_of<std::string>("--times")("--verbose");
+const auto rsync_flags = boost::assign::list_of<std::string>("--times")("--verbose")("--timeout=30");
 
 typedef std::string FileName;
 typedef std::vector<std::string> FileNameList;
