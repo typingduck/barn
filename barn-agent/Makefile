@@ -20,6 +20,8 @@ clean :
 
 $(DEB) :
 	@echo "Building agent .deb..."
+	mkdir -p build/usr/local/bin/
+	cp barn-agent build/usr/local/bin
 	$(MAKE) fpm
 	fpm -C build \
 			-s dir -t deb \
