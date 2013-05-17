@@ -1,3 +1,5 @@
 *.deb
 barn-agent
 build
+*.o
+.sconsign.dblite

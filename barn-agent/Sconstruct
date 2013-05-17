@@ -1,0 +1,29 @@
+import os, sys
+
+library_dependencies = ['boost_system'
+                      , 'boost_filesystem'
+                      , 'boost_timer'
+                      , 'boost_program_options'
+                      , 'pthread']
+
+env = Environment(CPPDEFINES=[], LIBS=[])
+
+env.Append(CPPPATH = ['./src/external/'])
+
+if os.environ.has_key('BOOST_LIB_PATH') == False:
+  print 'ERROR: Please define BOOST_LIB_PATH environment variable'
+  sys.exit(1)
+
+if os.environ.has_key('BOOST_INCLUDE_PATH') == False:
+  print 'ERROR: Please define BOOST_INCLUDE_PATH environment variable'
+  sys.exit(1)
+
+env.Append(CPPPATH = [os.environ['BOOST_INCLUDE_PATH']])
+env.Append(LIBPATH = [os.environ['BOOST_LIB_PATH']])
+
+link_flags = "--static" if env['PLATFORM'] != 'darwin' else ""
+
+env.Program('barn-agent', [Glob('./src/*.cpp')]
+                        , LIBS = library_dependencies
+                        , CCFLAGS = ['-std=c++11', '-pedantic']
+                        , LINKFLAGS = link_flags)

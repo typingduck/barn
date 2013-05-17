@@ -9,20 +9,18 @@ DEB := barn-agent_$(VERSION)_all.deb
 default : build
 
 build :
-	g++ -pedantic -Wall -std=c++0x -o barn-agent ./src/*.cpp -I./src/external/ -lboost_filesystem -lboost_system -lboost_program_options -lpthread
+	scons
 
 dist : build $(DEB)
 
 clean :
-	rm barn-agent
+	scons -c
 	rm -rf build
 	rm -f *.deb
 
 $(DEB) :
 	@echo "Building agent .deb..."
 	$(MAKE) fpm
-	mkdir -p build/usr/local/bin/
-	cp barn-agent build/usr/local/bin
 	fpm -C build \
 			-s dir -t deb \
 			-v $(VERSION) \
