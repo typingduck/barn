@@ -6,7 +6,9 @@ library_dependencies = ['boost_system'
                       , 'boost_program_options'
                       , 'pthread']
 
-env = Environment(CPPDEFINES=[], LIBS=[])
+env = Environment(CPPDEFINES=[]
+	        , LIBS=[]
+                , ENV = os.environ)
 
 env.Append(CPPPATH = ['./src/external/'])
 
@@ -17,6 +19,11 @@ if os.environ.has_key('BOOST_LIB_PATH') == False:
 if os.environ.has_key('BOOST_INCLUDE_PATH') == False:
   print 'ERROR: Please define BOOST_INCLUDE_PATH environment variable'
   sys.exit(1)
+
+if os.environ.has_key('CXX'):
+  custom_CXX = os.environ['CXX']
+  print 'Replacing default CXX with ' + custom_CXX
+  env.Replace(CXX = custom_CXX) 
 
 env.Append(CPPPATH = [os.environ['BOOST_INCLUDE_PATH']])
 env.Append(LIBPATH = [os.environ['BOOST_LIB_PATH']])
