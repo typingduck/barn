@@ -20,7 +20,7 @@ Barn Agent is written in C++ and requires the following dependencies:
 * Run make specifying where boost headers and libraries reside:
 
      ```
-     $ CPLUS_INCLUDE_PATH=<PATH_TO_BOOST_HEADERS> LIBRARY_PATH=<PATH_TO_BOOST_LIBRARIES> make
+     $ BOOST_INCLUDE_PATH=<PATH_TO_BOOST_HEADERS> BOOST_LIB_PATH=<PATH_TO_BOOST_LIBRARIES> make
       ```
       
 * You can also make a debian package out of the binary, via ```make dist```.
