@@ -32,5 +32,5 @@ link_flags = "--static" if env['PLATFORM'] != 'darwin' else ""
 
 env.Program('barn-agent', [Glob('./src/*.cpp')]
                         , LIBS = library_dependencies
-                        , CCFLAGS = ['-std=c++11', '-pedantic']
+                        , CCFLAGS = ['-std=c++11', '-pedantic', '-O2']
                         , LINKFLAGS = link_flags)
