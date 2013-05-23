@@ -12,7 +12,8 @@ int count_missing(std::vector<std::string> small, std::vector<std::string> big);
 /*
   Strange name for a function, so here's what it does.
   Given two sorted lists A and B, finds the set difference C = A \ B
-  and removes any element less than the smallest element in C.
+  and returns every element in B except the ones smaller than the smallest
+  element in C.
 
   Example:
   A = {1,2,3,4,5,6,7,8}
