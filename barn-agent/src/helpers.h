@@ -23,6 +23,8 @@ int count_missing(std::vector<std::string> small, std::vector<std::string> big);
 
 template<typename T>
 std::vector<T> larger_than_gap(const std::vector<T> A, const std::vector<T> B) {
+  using boost::lambda::_1;
+
   std::vector<T> C;
 
   set_difference(A.begin(), A.end(), B.begin(), B.end()
@@ -31,7 +33,7 @@ std::vector<T> larger_than_gap(const std::vector<T> A, const std::vector<T> B) {
   std::vector<T> D(B);
 
   if(!C.empty())
-      D.erase(remove_if(D.begin(), D.end(), boost::lambda::_1 <= C.back())
+      D.erase(remove_if(D.begin(), D.end(), _1 <= C.back())
             , D.end());
 
   return D;
