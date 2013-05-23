@@ -14,6 +14,9 @@ using namespace boost;
 Validation<FileNameList> query_candidates(const BarnConf& barn_conf) {
   const auto rsync_target = get_rsync_target(barn_conf);
 
+  auto existing_files = list_file_names(barn_conf.rsync_source, rsync_excluded_files);
+  sort(existing_files.begin(), existing_files.end());
+
   const auto rsync_dry_run =
     list_of<string>(rsync_executable_name)
                    (rsync_dry_run_flag)
@@ -28,7 +31,21 @@ Validation<FileNameList> query_candidates(const BarnConf& barn_conf) {
      rsync_output.first != PARTIAL_TRANSFER_DUE_VANISHED_SOURCE)
   return BarnError(string("Failed to retrieve sync list: ") + rsync_output.second);
 
-  return get_rsync_candidates(rsync_output.second);
+  auto rsync_candidates = get_rsync_candidates(rsync_output.second);
+  sort(rsync_candidates.begin(), rsync_candidates.end());
+
+  /* Given that a client is retaining arbitrarily long history of files
+   * this tries to detect which files are already on the server, and only
+   * syncs the ones that are timestamped later than the most recent file
+   * on the server. This is done by deducing the gap between what's existing
+   * locally and what's missing on the server. Example:
+   *
+   *  local:  {t1, t2, t3, t4, t5, t6}
+   *  remote: {t3, t4}                 //unknown to the client; to be deduced.
+   *  sync result: {t1, t2, t5, t6}
+   *  we'll ship: {t5,t4} since {t1,t2} are less than the gap {t3, t4}
+   */
+  return larger_than_gap(existing_files, rsync_candidates);
 }
 
 Validation<ShipStatistics>

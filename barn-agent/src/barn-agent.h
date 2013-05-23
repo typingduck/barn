@@ -14,8 +14,13 @@ const auto path_separator = "/";
 
 const auto remote_rsync_namespace = "barn_logs";
 
+const auto rsync_excluded_files = boost::assign::list_of<std::string>("config")("current")("lock");
+
 const auto rsync_exclusions = prepend_each(
-  boost::assign::list_of<std::string>("*.u")("config")("current")("lock")("*~"), "--exclude=");
+  boost::assign::list_of<std::string>("*.u")
+                                     .range(rsync_excluded_files)
+                                     ("*~")
+  , "--exclude=");
 
 const auto rsync_flags = boost::assign::list_of<std::string>("--times")("--verbose")("--timeout=30");
 

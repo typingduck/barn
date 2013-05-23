@@ -32,6 +32,17 @@ vector<string> list_file_names(string path_) {
   return file_names;
 }
 
+vector<string> list_file_names(string path_, vector<string> exclusions) {
+  auto file_names = list_file_names(path_);
+  decltype(exclusions) difference;
+  sort(file_names.begin(), file_names.end());
+  sort(exclusions.begin(), exclusions.end());
+  set_difference(file_names.begin(), file_names.end()
+               , exclusions.begin(), exclusions.end()
+               , back_inserter(difference));
+  return difference;
+}
+
 bool file_exists(std::string path_) {
   return fs::exists(fs::path(path_));
 }
