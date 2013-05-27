@@ -19,7 +19,7 @@ int count_missing(std::vector<std::string> small, std::vector<std::string> big);
   A = {1,2,3,4,5,6,7,8}
   B = {1,2,3,4,    7,8}
   C = A \ B = {6,7}
-  D = {x | x ∈ B && x < min(C)}   // result
+  D = {x | x ∈ B && x > min(C)}   // result
 */
 
 template<typename T>
