@@ -93,9 +93,9 @@ trait FileCombiner extends Logging {
   def compressionCodec : CompressionCodec = {
     import org.apache.hadoop.io.compress.DefaultCodec
     import org.apache.hadoop.io.compress.SnappyCodec
-    import org.apache.hadoop.io.compress.snappy.LoadSnappy
+//    import org.apache.hadoop.io.compress.snappy.LoadSnappy
 
-    if (LoadSnappy.isLoaded) {
+    if (true /*LoadSnappy.isLoaded*/) {
       new SnappyCodec()
     } else {
       warn("Snappy codec isn't loaded. Using the default compression codec")
