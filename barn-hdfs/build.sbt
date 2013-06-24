@@ -11,7 +11,7 @@ organization := "com.soundcloud"
 // 2.9.1
 scalaVersion := "2.10.0"
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-explaintypes", "-optimize")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimize")
 
 resolvers := Seq(
   "SC Hosted" at "http://maven.int.s-cloud.net/content/groups/hosted"
