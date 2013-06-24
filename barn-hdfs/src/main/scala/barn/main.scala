@@ -92,7 +92,7 @@ object BarnHdfsWriter
                                 , minMB)
     } yield ()
 
-    result ||| (reportError("Sync of " + serviceDir + "") _).fail
+    result.leftMap(reportError("Sync of " + serviceDir + "") _)
 
     }
   }
