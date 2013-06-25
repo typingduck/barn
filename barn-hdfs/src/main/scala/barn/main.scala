@@ -135,9 +135,13 @@ object BarnHdfsWriter
             case x => x success
           }
       case None =>
-	localFiles.dropWhile(f =>    //TODO Deduplicate me with the case above
-	  Tai64.convertTai64ToTime(
-	    svlogdFileNameToTaiString(f getName)).isBefore(maxLookBackTime)) success
+        localFiles.dropWhile(f =>    //TODO Deduplicate me with the case above
+          Tai64.convertTai64ToTime(
+            svlogdFileNameToTaiString(f getName))
+              .isBefore(maxLookBackTime)) match {
+                case Nil => NothingToSync("No local files left to sync.") fail
+                case x => x success
+               }
     }
   }
 }
