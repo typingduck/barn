@@ -49,7 +49,7 @@ trait LocalPlacementStrategy
         }
       }.success, "Deletion of retained files failed.")
     } yield tap(deletion) (x => info (x._1 + " retained files deleted and " +
-                                        x._2 / (1024 * 1024) + "MB remained" +
+                                        x._2 / (1024) + "KB remained" +
                                         " on " + dir ))
 }
 
