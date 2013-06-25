@@ -20,7 +20,7 @@ object BarnHdfsWriter
   with TimeUtils
   with Instruments {
 
-  val minMB = 10 //minimum megabytes to keep for each service!
+  val minMB = 1 //minimum megabytes to keep for each service!
   val maxLookBackDays = 10
   val excludeList = List("""^\..*""") //Exclude files starting with dot (temp)
 
@@ -134,7 +134,7 @@ object BarnHdfsWriter
             case Nil => NothingToSync("No local files left to sync.") fail
             case x => x success
           }
-      case None => 
+      case None =>
 	localFiles.dropWhile(f =>    //TODO Deduplicate me with the case above
 	  Tai64.convertTai64ToTime(
 	    svlogdFileNameToTaiString(f getName)).isBefore(maxLookBackTime)) success

@@ -34,7 +34,8 @@ trait LocalPlacementStrategy
         //Sum of the size of all files subject to deletion
         val sumSize = localFiles.foldLeft(0L) { (sum, f) => sum + f.length}
 
-        localFiles.foldLeft((0, sumSize)) {
+        localFiles.dropRight(1)
+                  .foldLeft((0, sumSize)) {
           case deletedSoFar -> curSize -> file =>
             val ts = Tai64.convertTai64ToTime(svlogdFileNameToTaiString(file.getName))
 
