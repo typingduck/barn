@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+export BOOST_INCLUDE_PATH=/usr/include/boost/
+export BOOST_LIB_PATH=/usr/lib/
+
+%:
+	dh  $@
