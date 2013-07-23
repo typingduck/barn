@@ -1,0 +1,18 @@
+Source: barn
+Section: devel
+Priority: optional
+Maintainer: Data Team <data-developers@soundcloud.com>
+Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 7), libstdc++6, gcc, openjdk-6-jdk, ghc, scons, libboost-all-dev
+Vcs-Git: git@github.com:soundcloud/barn.git
+Homepage: https://github.com/soundcloud/barn
+
+Package: barn-agent
+Architecture: amd64
+Depends: ${shlibs:Depends}
+Description: Barn is a log aggregation and archival system.
+
+Package: barn-master
+Architecture: amd64
+Depends: ${shlibs:Depends}
+Description: Barn is a log aggregation and archival system.
