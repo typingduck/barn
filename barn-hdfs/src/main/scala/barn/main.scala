@@ -50,14 +50,19 @@ object BarnHdfsWriter
       info("No service has appeared in root log dir. Incorporating patience.")
       Thread.sleep(1000)
     case xs =>
+
+     import scala.collection.JavaConverters._
+     val hdfsListCache : HdfsListCache = new HdfsListCacheJ asScala
+
      //Working around SI-4843 https://issues.scala-lang.org/browse/SI-4843
      if(barnConf.runParallel)
-        xs.par map actOnServiceDir(barnConf)
+        xs.par map actOnServiceDir(barnConf, hdfsListCache)
       else
-        xs map actOnServiceDir(barnConf)
+        xs map actOnServiceDir(barnConf, hdfsListCache)
   }
 
-  def actOnServiceDir(barnConf: BarnConf)(serviceDir : Dir) = {
+  def actOnServiceDir(barnConf: BarnConf, hdfsListCache: HdfsListCache)
+                     (serviceDir : Dir) = {
 
     reportOngoingSync {
 
@@ -70,7 +75,8 @@ object BarnHdfsWriter
                                 , serviceInfo
                                 , barnConf.hdfsLogDir
                                 , barnConf.shipInterval
-                                , lookBack)
+                                , lookBack
+                                , hdfsListCache)
 
       candidates  <- outstandingFiles(localFiles, plan lastTaistamp, maxLookBackDays)
       concatted   <- reportCombineTime(

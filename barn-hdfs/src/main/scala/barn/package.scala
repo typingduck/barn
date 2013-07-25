@@ -47,6 +47,12 @@ package object barn {
 
   private val lineDelim = System.getProperty("line.separator")
 
+  import java.util.concurrent.ConcurrentHashMap
+  import scala.collection._
+
+  type HdfsListCacheJ = ConcurrentHashMap[HdfsDir, Validation[BarnError, List[HdfsFile]]]
+  type HdfsListCache = concurrent.Map[HdfsDir, Validation[BarnError, List[HdfsFile]]]
+
   def validate[U](body: => Validation[BarnError,U],
                   detail: String = null,
                   carryException: Boolean = true)
