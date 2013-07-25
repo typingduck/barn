@@ -3,7 +3,7 @@ import com.twitter.sbt._
 
 name := "barn-hdfs"
 
-version := "0.1.26"
+version := "0.1.27"
 
 organization := "com.soundcloud"
 
