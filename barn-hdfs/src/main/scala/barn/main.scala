@@ -55,9 +55,16 @@ object BarnHdfsWriter
      val hdfsListCache : HdfsListCache = new HdfsListCacheJ asScala
 
      //Working around SI-4843 https://issues.scala-lang.org/browse/SI-4843
-     if(barnConf.runParallel)
-        xs.par map actOnServiceDir(barnConf, hdfsListCache)
-      else
+     if(barnConf.runParallel) {
+        import scala.collection.parallel._
+        import scala.concurrent._
+
+        val xsPar = xs.par
+        xsPar.tasksupport = new ForkJoinTaskSupport(
+                              new forkjoin.ForkJoinPool(barnConf.degParallel))
+
+        xsPar map actOnServiceDir(barnConf, hdfsListCache)
+      } else
         xs map actOnServiceDir(barnConf, hdfsListCache)
   }
 

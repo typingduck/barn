@@ -24,6 +24,8 @@ trait ParamParser
             tap(new HadoopConf()){_.set("fs.default.name", v)})},
       booleanOpt("p", "run-parallel", "<bool>", "ship service logs in parallel. (default: false)")
           {(v: Boolean, c: BarnConf) => c.copy(runParallel = v)},
+      intOpt("p", "deg-parallel", "<bool>", "degree of parallelsim (default: 2)")
+          {(v: Int, c: BarnConf) => c.copy(degParallel = v)},
       intOpt("i", "ship-interval", "<int>", "How often to ship each service's logs. (sefault: 3600 s)")
           {(v: Int, c: BarnConf) => c.copy(shipInterval = v)},
       opt("ganglia-host", "Enables and specifies ganglia host")
@@ -45,6 +47,7 @@ trait ParamParser
                                  , null
                                  , null
                                  , false
+                                 , 2
                                  , 3600
                                  , null
                                  , -1)

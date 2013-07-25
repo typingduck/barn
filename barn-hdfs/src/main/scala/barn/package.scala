@@ -40,6 +40,7 @@ package object barn {
                     , hdfsLogDir: HdfsDir
                     , hdfsEndpoint: HadoopConf
                     , runParallel: Boolean
+                    , degParallel: Integer
                     , shipInterval: Int
                     , gangliaHost: String
                     , gangliaPort: Int
