@@ -27,11 +27,27 @@ trait HdfsPlacementStrategy
                          , service  : String
                          , taistamp : String)
 
+  def cachingLs(fs: HdfsFileSystem
+              , path: HdfsDir
+              , hdfsListCache: HdfsListCache)
+  : Validation[barn.BarnError, List[barn.HdfsFile]] = {
+    hdfsListCache.get(path) match {
+      case Some(x) => x
+      case None => {
+        val listResult = listHdfsFiles(fs, path)
+        hdfsListCache += ( path -> listResult)
+        info(s"I called LS on $path and have a cache of size " + hdfsListCache.size)
+        listResult
+      }
+    }
+  }
+
   def planNextShip(fs: HdfsFileSystem
                  , serviceInfo: LocalServiceInfo
                  , baseHdfsDir: HdfsDir
                  , shipInterval: Int
-                 , lookBackLowerBound: DateTime)
+                 , lookBackLowerBound: DateTime
+                 , hdfsListCache: HdfsListCache)
   : Validation[BarnError, ShippingPlan] = {
 
     val hdfsTempDir = targetTempDir(baseHdfsDir)
@@ -41,11 +57,11 @@ trait HdfsPlacementStrategy
 
     val dirsWithRelevantHdfsFilesStream = for {
         each           <- hdfsDirStream
-        relevantFiles  <- listHdfsFiles(fs, each) match {
+        relevantFiles  <- cachingLs(fs, each , hdfsListCache) match {
 			      case Failure(FileNotFound(_)) => None
 			      case Failure(a) => Failure(a) some
-			      case Success(Nil) => None 
-			      case Success(a) => 
+			      case Success(Nil) => None
+			      case Success(a) =>
 				logsForService(serviceInfo, a) match {
 				  case Success(Nil) => None
 				  case otherwise => otherwise some
