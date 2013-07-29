@@ -92,6 +92,9 @@ object BarnHdfsWriter
       lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
       targetName_  = targetName(lastTaistamp, serviceInfo)
 
+      _           <- ensureHdfsDir(fs, plan.hdfsDir)
+      _           <- ensureHdfsDir(fs, plan.hdfsTempDir)
+
       _           <- reportShipTime(
                       atomicShipToHdfs(fs
                                     , concatted
