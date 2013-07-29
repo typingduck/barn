@@ -75,7 +75,7 @@ object BarnHdfsWriter
 
     val result = for {
       serviceInfo <- decodeServiceInfo(serviceDir)
-      fs          <- createFileSystem(barnConf.hdfsEndpoint)
+      fs          <- createLazyFileSystem(barnConf.hdfsEndpoint)
       localFiles  <- listSortedLocalFiles(serviceDir, excludeList)
       lookBack    <- earliestLookbackDate(localFiles, maxLookBackDays)
       plan        <- planNextShip(fs

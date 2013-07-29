@@ -27,7 +27,7 @@ trait HdfsPlacementStrategy
                          , service  : String
                          , taistamp : String)
 
-  def cachingLs(fs: HdfsFileSystem
+  def cachingLs(fs: LazyHdfsFileSystem
               , path: HdfsDir
               , hdfsListCache: HdfsListCache)
   : Validation[barn.BarnError, List[barn.HdfsFile]] = {
@@ -42,7 +42,7 @@ trait HdfsPlacementStrategy
     }
   }
 
-  def planNextShip(fs: HdfsFileSystem
+  def planNextShip(fs: LazyHdfsFileSystem
                  , serviceInfo: LocalServiceInfo
                  , baseHdfsDir: HdfsDir
                  , shipInterval: Int

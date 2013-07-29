@@ -12,6 +12,8 @@ trait Hadoop extends Logging {
   import scala.util.control.Exception.catching
   import java.io.FileNotFoundException
 
+  type LazyHdfsFileSystem = LazyWrapper[HdfsFileSystem]
+
   type RemainingArgs = Array[String]
 
   def parseHadoopConf(args: Array[String]) : (RemainingArgs, Configuration) = {
@@ -37,6 +39,10 @@ trait Hadoop extends Logging {
   def createFileSystem(conf: Configuration)
   : Validation[BarnError, HdfsFileSystem]
   = HdfsFileSystem.get(conf).success
+
+  def createLazyFileSystem(conf: Configuration)
+  : Validation[BarnError, LazyHdfsFileSystem]
+  = new LazyWrapper(HdfsFileSystem.get(conf)).success
 
   def listHdfsFiles(fs: HdfsFileSystem, hdfsDir: HdfsDir)
   : Validation[BarnError, List[HdfsFile]]

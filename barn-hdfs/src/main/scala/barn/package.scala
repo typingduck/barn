@@ -89,4 +89,12 @@ package object barn {
     }
   }
 
+  class LazyWrapper[T](wrp: => T) {
+    lazy val wrapped: T = wrp
+  }
+
+  object LazyWrapper {
+    implicit def unboxLazy[T](wrapper: LazyWrapper[T]): T = wrapper.wrapped
+  }
+
 }
