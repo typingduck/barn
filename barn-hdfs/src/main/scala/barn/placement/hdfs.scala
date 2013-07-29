@@ -70,9 +70,6 @@ trait HdfsPlacementStrategy
       } yield relevantFiles
 
     for {
-       _                    <- ensureHdfsDir(fs, targetHdfsDir)
-       _                    <- ensureHdfsDir(fs, hdfsTempDir)
-
        hdfsFilesFileInfo    <- dirsWithRelevantHdfsFilesStream
                                 .headOption
                                 .getOrElse(List.empty[PlacedFileInfo].success)
