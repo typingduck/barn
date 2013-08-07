@@ -60,8 +60,8 @@ package object barn {
                         month: Int,
                         day: Int)
 
-  type HdfsListCacheJ = ConcurrentHashMap[HdfsDir, Validation[BarnError, List[Validation[BarnError, PlacedFileInfo]]]]
-  type HdfsListCache = concurrent.Map[HdfsDir, Validation[BarnError, List[Validation[BarnError, PlacedFileInfo]]]]
+  type HdfsListCacheJ = ConcurrentHashMap[HdfsDir, Validation[BarnError, Validation[BarnError, List[PlacedFileInfo]]]]
+  type HdfsListCache = concurrent.Map[HdfsDir, Validation[BarnError, Validation[BarnError, List[PlacedFileInfo]]]]
 
   def validate[U](body: => Validation[BarnError,U],
                   detail: String = null,

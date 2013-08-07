@@ -21,11 +21,11 @@ trait HdfsPlacementStrategy
   def cachingLs(fs: LazyHdfsFileSystem
               , path: HdfsDir
               , hdfsListCache: HdfsListCache)
-  : Validation[barn.BarnError, List[Validation[BarnError, PlacedFileInfo]]] = {
+  : Validation[barn.BarnError, Validation[BarnError, List[PlacedFileInfo]]] = {
     hdfsListCache.get(path) match {
       case Some(x) => x
       case None => {
-        val listResult = listHdfsFiles(fs, path).map(_ map getPlacedFileInfo)
+        val listResult = listHdfsFiles(fs, path).map(x => collapseValidate(x map getPlacedFileInfo))
         hdfsListCache += ( path -> listResult)
         info(s"I called LS on $path and have a cache of size " + hdfsListCache.size)
         listResult
@@ -59,7 +59,7 @@ trait HdfsPlacementStrategy
         relevantFiles  <- cachingLs(fs, each , hdfsListCache) match {
 			      case Failure(FileNotFound(_)) => None
 			      case Failure(a) => Failure(a) some
-			      case Success(Nil) => None
+//			      case Success(Nil) => None
 			      case Success(a) =>
 				time_("logsForService", logsForService(serviceInfo, a)) match {
 				  case Success(Nil) => None
@@ -82,9 +82,9 @@ trait HdfsPlacementStrategy
   }
 
   def logsForService(serviceInfo: LocalServiceInfo,
-                     hdfsPlacedFileInfos: List[Validation[BarnError, PlacedFileInfo]])
+                     hdfsPlacedFileInfos: Validation[BarnError, List[PlacedFileInfo]])
   : Validation[BarnError, List[PlacedFileInfo]] = for {
-    hdfsFilesPlaceInfo <- time_("collapseValidate", collapseValidate(hdfsPlacedFileInfos))
+    hdfsFilesPlaceInfo <- time_("collapseValidate", hdfsPlacedFileInfos)
     hdfsFilesFiltered   = time_("filter", filter(hdfsFilesPlaceInfo, serviceInfo))
   } yield hdfsFilesFiltered
 
