@@ -59,7 +59,8 @@ trait HdfsPlacementStrategy
         relevantFiles  <- cachingLs(fs, each , hdfsListCache) match {
 			      case Failure(FileNotFound(_)) => None
 			      case Failure(a) => Failure(a) some
-//			      case Success(Nil) => None
+            case Success(Failure(a)) => Failure(a) some
+			      case Success(Success(Nil)) => None
 			      case Success(a) =>
 				time_("logsForService", logsForService(serviceInfo, a)) match {
 				  case Success(Nil) => None
