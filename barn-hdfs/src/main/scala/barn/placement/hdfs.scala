@@ -15,26 +15,17 @@ trait HdfsPlacementStrategy
   with Hadoop
   with SvlogdFile {
 
-  case class DateBucket(year: Int,
-                        month: Int,
-                        day: Int)
-
   implicit def dateBucket2Date(d: DateBucket) : DateTime
   = new DateTime(d.year, d.month, d.day, 0, 0)
-
-  case class PlacedFileInfo(bucket   : DateBucket
-                         , host     : String
-                         , service  : String
-                         , taistamp : String)
 
   def cachingLs(fs: LazyHdfsFileSystem
               , path: HdfsDir
               , hdfsListCache: HdfsListCache)
-  : Validation[barn.BarnError, List[barn.HdfsFile]] = {
+  : Validation[barn.BarnError, List[Validation[BarnError, PlacedFileInfo]]] = {
     hdfsListCache.get(path) match {
       case Some(x) => x
       case None => {
-        val listResult = listHdfsFiles(fs, path)
+        val listResult = listHdfsFiles(fs, path).map(_ map getPlacedFileInfo)
         hdfsListCache += ( path -> listResult)
         info(s"I called LS on $path and have a cache of size " + hdfsListCache.size)
         listResult
@@ -83,9 +74,9 @@ trait HdfsPlacementStrategy
   }
 
   def logsForService(serviceInfo: LocalServiceInfo,
-                     hdfsFiles: List[HdfsFile])
+                     hdfsPlacedFileInfos: List[Validation[BarnError, PlacedFileInfo]])
   : Validation[BarnError, List[PlacedFileInfo]] = for {
-    hdfsFilesPlaceInfo <- collapseValidate(hdfsFiles map getPlacedFileInfo)
+    hdfsFilesPlaceInfo <- collapseValidate(hdfsPlacedFileInfos)
     hdfsFilesFiltered   = filter(hdfsFilesPlaceInfo, serviceInfo)
   } yield hdfsFilesFiltered
 

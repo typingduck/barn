@@ -51,8 +51,17 @@ package object barn {
   import java.util.concurrent.ConcurrentHashMap
   import scala.collection._
 
-  type HdfsListCacheJ = ConcurrentHashMap[HdfsDir, Validation[BarnError, List[HdfsFile]]]
-  type HdfsListCache = concurrent.Map[HdfsDir, Validation[BarnError, List[HdfsFile]]]
+  case class PlacedFileInfo(bucket   : DateBucket
+                         , host     : String
+                         , service  : String
+                         , taistamp : String)
+
+  case class DateBucket(year: Int,
+                        month: Int,
+                        day: Int)
+
+  type HdfsListCacheJ = ConcurrentHashMap[HdfsDir, Validation[BarnError, List[Validation[BarnError, PlacedFileInfo]]]]
+  type HdfsListCache = concurrent.Map[HdfsDir, Validation[BarnError, List[Validation[BarnError, PlacedFileInfo]]]]
 
   def validate[U](body: => Validation[BarnError,U],
                   detail: String = null,
