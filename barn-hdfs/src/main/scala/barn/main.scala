@@ -63,9 +63,17 @@ object BarnHdfsWriter
         xsPar.tasksupport = new ForkJoinTaskSupport(
                               new forkjoin.ForkJoinPool(barnConf.degParallel))
 
-        xsPar map actOnServiceDir(barnConf, hdfsListCache)
+        xsPar map( x => time("actOnServiceDir", actOnServiceDir(barnConf, hdfsListCache)(x)) )
       } else
         xs map actOnServiceDir(barnConf, hdfsListCache)
+  }
+
+  def time[A](desc: String, a: => A) : A = {
+    val now = System.nanoTime
+    val result = a
+    val micros = (System.nanoTime - now) / 1000
+    println("%s took %d microseconds".format(desc, micros))
+    result
   }
 
   def actOnServiceDir(barnConf: BarnConf, hdfsListCache: HdfsListCache)
@@ -74,18 +82,18 @@ object BarnHdfsWriter
     reportOngoingSync {
 
     val result = for {
-      serviceInfo <- decodeServiceInfo(serviceDir)
-      fs          <- createLazyFileSystem(barnConf.hdfsEndpoint)
-      localFiles  <- listSortedLocalFiles(serviceDir, excludeList)
-      lookBack    <- earliestLookbackDate(localFiles, maxLookBackDays)
-      plan        <- planNextShip(fs
+      serviceInfo <- time("decodeServiceInfo", decodeServiceInfo(serviceDir))
+      fs          <- time("createLazyFileSystem", createLazyFileSystem(barnConf.hdfsEndpoint))
+      localFiles  <- time("listSortedLocalFiles", listSortedLocalFiles(serviceDir, excludeList))
+      lookBack    <- time("earliestLookBackDate", earliestLookbackDate(localFiles, maxLookBackDays))
+      plan        <- time("planNextShip", planNextShip(fs
                                 , serviceInfo
                                 , barnConf.hdfsLogDir
                                 , barnConf.shipInterval
                                 , lookBack
-                                , hdfsListCache)
+                                , hdfsListCache))
 
-      candidates  <- outstandingFiles(localFiles, plan lastTaistamp, maxLookBackDays)
+      candidates  <- time("outstandingFiles", outstandingFiles(localFiles, plan lastTaistamp, maxLookBackDays))
       concatted   <- reportCombineTime(
                        concatCandidates(candidates, barnConf.localTempDir))
 
