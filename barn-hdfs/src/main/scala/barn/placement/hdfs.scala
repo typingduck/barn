@@ -33,6 +33,14 @@ trait HdfsPlacementStrategy
     }
   }
 
+  def time_[A](desc: String, a: => A) : A = {
+    val now = System.nanoTime
+    val result = a
+    val micros = (System.nanoTime - now) / 1000
+    println("%s took %d microseconds".format(desc, micros))
+    result
+  }
+
   def planNextShip(fs: LazyHdfsFileSystem
                  , serviceInfo: LocalServiceInfo
                  , baseHdfsDir: HdfsDir
@@ -53,7 +61,7 @@ trait HdfsPlacementStrategy
 			      case Failure(a) => Failure(a) some
 			      case Success(Nil) => None
 			      case Success(a) =>
-				logsForService(serviceInfo, a) match {
+				time_("logsForService", logsForService(serviceInfo, a)) match {
 				  case Success(Nil) => None
 				  case otherwise => otherwise some
 				}
@@ -76,8 +84,8 @@ trait HdfsPlacementStrategy
   def logsForService(serviceInfo: LocalServiceInfo,
                      hdfsPlacedFileInfos: List[Validation[BarnError, PlacedFileInfo]])
   : Validation[BarnError, List[PlacedFileInfo]] = for {
-    hdfsFilesPlaceInfo <- collapseValidate(hdfsPlacedFileInfos)
-    hdfsFilesFiltered   = filter(hdfsFilesPlaceInfo, serviceInfo)
+    hdfsFilesPlaceInfo <- time_("collapseValidate", collapseValidate(hdfsPlacedFileInfos))
+    hdfsFilesFiltered   = time_("filter", filter(hdfsFilesPlaceInfo, serviceInfo))
   } yield hdfsFilesFiltered
 
   def getLastShippedTaistamp(hdfsFiles: List[PlacedFileInfo], serviceInfo: LocalServiceInfo)
