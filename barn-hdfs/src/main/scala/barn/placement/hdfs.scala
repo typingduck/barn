@@ -15,26 +15,17 @@ trait HdfsPlacementStrategy
   with Hadoop
   with SvlogdFile {
 
-  case class DateBucket(year: Int,
-                        month: Int,
-                        day: Int)
-
   implicit def dateBucket2Date(d: DateBucket) : DateTime
   = new DateTime(d.year, d.month, d.day, 0, 0)
-
-  case class PlacedFileInfo(bucket   : DateBucket
-                         , host     : String
-                         , service  : String
-                         , taistamp : String)
 
   def cachingLs(fs: LazyHdfsFileSystem
               , path: HdfsDir
               , hdfsListCache: HdfsListCache)
-  : Validation[barn.BarnError, List[barn.HdfsFile]] = {
+  : Validation[barn.BarnError, Validation[BarnError, List[PlacedFileInfo]]] = {
     hdfsListCache.get(path) match {
       case Some(x) => x
       case None => {
-        val listResult = listHdfsFiles(fs, path)
+        val listResult = listHdfsFiles(fs, path).map(x => collapseValidate(x map getPlacedFileInfo))
         hdfsListCache += ( path -> listResult)
         info(s"I called LS on $path and have a cache of size " + hdfsListCache.size)
         listResult
@@ -60,7 +51,8 @@ trait HdfsPlacementStrategy
         relevantFiles  <- cachingLs(fs, each , hdfsListCache) match {
 			      case Failure(FileNotFound(_)) => None
 			      case Failure(a) => Failure(a) some
-			      case Success(Nil) => None
+            case Success(Failure(a)) => Failure(a) some
+			      case Success(Success(Nil)) => None
 			      case Success(a) =>
 				logsForService(serviceInfo, a) match {
 				  case Success(Nil) => None
@@ -83,10 +75,10 @@ trait HdfsPlacementStrategy
   }
 
   def logsForService(serviceInfo: LocalServiceInfo,
-                     hdfsFiles: List[HdfsFile])
+                     hdfsFilesPlacedInfos: Validation[BarnError, List[PlacedFileInfo]])
   : Validation[BarnError, List[PlacedFileInfo]] = for {
-    hdfsFilesPlaceInfo <- collapseValidate(hdfsFiles map getPlacedFileInfo)
-    hdfsFilesFiltered   = filter(hdfsFilesPlaceInfo, serviceInfo)
+    hdfsFilesPlacedInfos_ <- hdfsFilesPlacedInfos
+    hdfsFilesFiltered      = filter(hdfsFilesPlacedInfos_, serviceInfo)
   } yield hdfsFilesFiltered
 
   def getLastShippedTaistamp(hdfsFiles: List[PlacedFileInfo], serviceInfo: LocalServiceInfo)
