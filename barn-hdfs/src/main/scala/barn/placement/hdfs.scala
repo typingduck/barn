@@ -24,11 +24,12 @@ trait HdfsPlacementStrategy
   : Validation[barn.BarnError, Validation[BarnError, List[PlacedFileInfo]]] = {
     hdfsListCache.get(path) match {
       case Some(x) => x
-      case None => {
-        val listResult = listHdfsFiles(fs, path).map(x => collapseValidate(x map getPlacedFileInfo))
-        hdfsListCache += ( path -> listResult)
-        info(s"I called LS on $path and have a cache of size " + hdfsListCache.size)
-        listResult
+      case None => hdfsListCache.get(path) match  {
+        case Some(cachedList) => cachedList
+        case None =>
+          hdfsListCache.putIfAbsent(path, listHdfsFiles(fs, path).map(x =>
+                                     collapseValidate(x map getPlacedFileInfo)))
+          hdfsListCache.get(path).get
       }
     }
   }
