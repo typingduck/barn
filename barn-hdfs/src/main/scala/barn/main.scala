@@ -38,8 +38,7 @@ object BarnHdfsWriter
         listDirs().fold(logBarnError("List dirs in" + barnConf.localLogDir)
                       , syncRootLogDir(barnConf))
 
-        info("Round of sync finished. Sleeping.")
-        Thread.sleep(600000) //Replace me with iNotify //TODO make me config'able
+        info("Round of sync finished.")
       }
     }
   }}
