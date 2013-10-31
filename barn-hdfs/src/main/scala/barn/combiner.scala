@@ -39,17 +39,16 @@ trait FileCombiner extends Logging {
 
   //Combines local files into a local combined sequence file
   def combineIntoSeqFile(localFiles: List[File]
-                       , outputFile: File) = {
+                        , fs: FileSystem
+                        , outputFile: String) = {
 
     import java.io.{BufferedReader, InputStreamReader, FileInputStream}
 
-    val conf = new Configuration
-    val fs = FileSystem.getLocal(conf)
     val decoder = getUTF8Decoder
 
     val outputWriter = SequenceFile.createWriter( fs
-                         , conf
-                         , new HdfsDir(outputFile.getAbsolutePath)
+                         , fs.getConf
+                         , new HdfsFile(outputFile)
                          , classOf[LW]
                          , classOf[BW]
                          , CompressionType.BLOCK
@@ -82,11 +81,21 @@ trait FileCombiner extends Logging {
     val combinedLocalFile = new File(targetDir, combinedName)
     info("Combining " + candidates.size + " ("+ candidates.head + " and ... )" +
       " into " + combinedLocalFile)
-    combineIntoSeqFile(candidates, combinedLocalFile)
+    combineIntoSeqFile(candidates, Hadoop.getLocalFS, combinedLocalFile.getAbsolutePath)
     combinedLocalFile success
   } , "Can't combine files into a sequence file." +
       " Candidates to combine: " + candidates)
 
+  def concatCandidatesHdfs(candidates: List[File], fs: FileSystem, targetDir: HdfsDir)
+  : Validation[BarnError, HdfsFile] = validate ({
+    val combinedName = RandomStringUtils.randomAlphanumeric(20)
+    val combinedHdfsFile = new HdfsFile(targetDir, combinedName)
+    info("Combining on HDFS " + candidates.size + " ("+ candidates.head + " and ... )" +
+      " into " + combinedHdfsFile)
+    combineIntoSeqFile(candidates, fs, combinedHdfsFile.toUri().getPath())
+    combinedHdfsFile success
+  } , "Can't combine files into a sequence file over HDFS." +
+      " Candidates to combine: " + candidates)
 
   import org.apache.hadoop.io.compress.CompressionCodec
 

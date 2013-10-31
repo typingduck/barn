@@ -90,5 +90,7 @@ trait Hadoop extends Logging {
     targetFile.success
   }, "Can't ship to hdfs from " + localFile + " to " + targetFile )
 
+
+  def getLocalFS : HdfsFileSystem = HdfsFileSystem.getLocal(new Configuration)
 }
 

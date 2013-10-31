@@ -86,7 +86,7 @@ object BarnHdfsWriter
 
       candidates  <- outstandingFiles(localFiles, plan lastTaistamp, maxLookBackDays)
       concatted   <- reportCombineTime(
-                       concatCandidates(candidates, barnConf.localTempDir))
+                       concatCandidatesHdfs(candidates, fs, plan hdfsTempDir))
 
       lastTaistamp = svlogdFileNameToTaiString(candidates.last.getName)
       targetName_  = targetName(lastTaistamp, serviceInfo)
@@ -94,12 +94,7 @@ object BarnHdfsWriter
       _           <- ensureHdfsDir(fs, plan.hdfsDir)
       _           <- ensureHdfsDir(fs, plan.hdfsTempDir)
 
-      _           <- reportShipTime(
-                      atomicShipToHdfs(fs
-                                    , concatted
-                                    , plan hdfsDir
-                                    , targetName_
-                                    , plan hdfsTempDir))
+      _           <- atomicRenameOnHdfs(fs, concatted, plan hdfsDir, targetName_)
 
       shippedTS   <- svlogdFileTimestamp(candidates last)
       _           <- cleanupLocal(serviceDir
