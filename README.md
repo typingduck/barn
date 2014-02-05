@@ -258,6 +258,7 @@ short TTL and perform manual failover.
 ## Maintainers
 
   * Omid Aladini <omid@soundcloud.com>
+  * Kim Altintop <kim@soundcloud.com>
 
 ## Contributors
 
