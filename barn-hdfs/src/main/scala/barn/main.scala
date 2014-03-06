@@ -104,7 +104,8 @@ object BarnHdfsWriter
       shippedTS   <- svlogdFileTimestamp(candidates last)
       _           <- cleanupLocal(serviceDir
                                 , shippedTS
-                                , minMB)
+                                , minMB
+                                , excludeList)
     } yield ()
 
     result.leftMap(reportError("Sync of " + serviceDir + "") _)
