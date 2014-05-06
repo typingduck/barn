@@ -12,6 +12,10 @@ trait LocalFS {
   = validate(dir.listFiles.toList.filter(x => x.isDirectory) success,
     "Can't get list of local services directories on: " + dir)
 
+  def sumFileSizes(files: List[File]) : Long = {
+    files.map(_.length).sum
+  }
+
   def listSortedLocalFiles(dir : Dir, exclude: List[String] = List.empty)
   : Validation[BarnError, List[File]] = validate ({
     dir.listFiles

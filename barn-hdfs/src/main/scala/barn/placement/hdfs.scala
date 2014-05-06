@@ -35,6 +35,8 @@ trait HdfsPlacementStrategy
 
   def planNextShip(fs: LazyHdfsFileSystem
                  , serviceInfo: LocalServiceInfo
+                 , totalReadySize: Long
+                 , maxReadySize: Long
                  , baseHdfsDir: HdfsDir
                  , shipInterval: Int
                  , lookBackLowerBound: DateTime
@@ -69,7 +71,11 @@ trait HdfsPlacementStrategy
        lastShippedTaistamp   = getLastShippedTaistamp(hdfsFilesFileInfo, serviceInfo)
        lastShippedTimestamp  = lastShippedTaistamp.map(Tai64.convertTai64ToTime(_))
 
-       _                    <- isShippingTime(lastShippedTimestamp, shipInterval)
+       _                    <- isShippingTime(lastShippedTimestamp
+                                            , shipInterval
+                                            , totalReadySize
+                                            , maxReadySize)
+
     } yield ShippingPlan(targetHdfsDir, hdfsTempDir, lastShippedTaistamp)
 
   }
@@ -84,11 +90,12 @@ trait HdfsPlacementStrategy
   def getLastShippedTaistamp(hdfsFiles: List[PlacedFileInfo], serviceInfo: LocalServiceInfo)
   : Option[String] = sorted(hdfsFiles, serviceInfo).lastOption.map(_.taistamp)
 
-  def isShippingTime(lastShippedTimestamp: Option[DateTime], shippingInterval: Int)
+  def isShippingTime(lastShippedTimestamp: Option[DateTime], shippingInterval: Int, totalReadySize: Long, maxReadySize: Long)
   : Validation[BarnError, Unit]
   = lastShippedTimestamp match {
     case Some(lastTimestamp) =>
-      enoughTimePast(lastTimestamp, shippingInterval) match {
+      (enoughTimePast(lastTimestamp, shippingInterval) ||
+       totalReadySize > maxReadySize) match {
         case true => () success
         case false => SyncThrottled("I synced not long ago.") fail
       }

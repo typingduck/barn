@@ -22,6 +22,7 @@ object BarnHdfsWriter
 
   val minMB = 1 //minimum megabytes to keep for each service!
   val maxLookBackDays = 3
+  val maxReadySize = 1 * 1024 * 1024 * 1024 // 1GB
   val excludeList = List("""^\..*""") //Exclude files starting with dot (temp)
 
   loadConf(args) { barnConf => {
@@ -76,9 +77,12 @@ object BarnHdfsWriter
       serviceInfo <- decodeServiceInfo(serviceDir)
       fs          <- createLazyFileSystem(barnConf.hdfsEndpoint)
       localFiles  <- listSortedLocalFiles(serviceDir, excludeList)
+      totalReadySize <- sumFileSizes(localFiles).success
       lookBack    <- earliestLookbackDate(localFiles, maxLookBackDays)
       plan        <- planNextShip(fs
                                 , serviceInfo
+                                , totalReadySize
+                                , maxReadySize
                                 , barnConf.hdfsLogDir
                                 , barnConf.shipInterval
                                 , lookBack
