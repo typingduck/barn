@@ -21,7 +21,7 @@ object BarnHdfsWriter
   with Instruments {
 
   val minMB = 1 //minimum megabytes to keep for each service!
-  val maxLookBackDays = 10
+  val maxLookBackDays = 3
   val excludeList = List("""^\..*""") //Exclude files starting with dot (temp)
 
   loadConf(args) { barnConf => {
@@ -107,6 +107,12 @@ object BarnHdfsWriter
                                 , minMB
                                 , excludeList)
     } yield ()
+
+    result.leftMap( _ =>
+                     cleanupLocal(serviceDir
+                                , DateTime.now.minusDays(maxLookBackDays+1)
+                                , minMB
+                                , excludeList))
 
     result.leftMap(reportError("Sync of " + serviceDir + "") _)
 
