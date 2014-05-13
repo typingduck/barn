@@ -6,7 +6,7 @@ Barn Agent, runs as a part of Barn logging pipeline. It monitors directories con
 Barn Agent is written in C++ and requires the following dependencies:
 
 * Compile-time:
-  - Boost Libraries (tested against 1.53.0) and needs to link against (boost::system, boost::filesystem)
+  - Boost Libraries (tested against 1.49.0) and needs to link against (boost::system, boost::filesystem)
   - Boost.Process (which is not a part of official boost libraries, but included in the source three.)
   - A C++0x compliant to compile C++0x features. Tested with GCC 4.7.2.
 * Run-time:
@@ -22,6 +22,18 @@ Barn Agent is written in C++ and requires the following dependencies:
      ```
      $ BOOST_INCLUDE_PATH=<PATH_TO_BOOST_HEADERS> BOOST_LIB_PATH=<PATH_TO_BOOST_LIBRARIES> make
       ```
+  On debian, you'll satisfy build requirements by having the following packages installed:
+      
+     - libboost-dev
+     - libboost-system-dev 
+     - libboost-filesystem-dev 
+     - libboost-timer-dev 
+     - libboost-program-options      
+     
+  And you're header and lib directories will be:
+  
+    - BOOST_LIB_PATH=/usr/include/boost/ 
+    - BOOST_INCLUDE_PATH=/usr/lib/
       
 * You can also make a debian package out of the binary, via ```make dist```.
 
