@@ -18,11 +18,11 @@ class BarnStepsSuite extends FunSuite with Checkers {
     def f = throw new RuntimeException("hola")
     val error = "function didn't run successfully"
     val result = validate(f, error, false)
-    assert(result == Failure(ThrownException(error)))
+    assert(result == -\/(ThrownException(error)))
   }
 
   test("Validate should return success if no exception happened") {
-    def f = 1.success
+    def f = 1.right
     val error = "function didn't run successfully"
     val result = validate(f, error)
     assert(result == f)

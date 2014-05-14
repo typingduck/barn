@@ -8,8 +8,8 @@ trait LocalFS {
   import Scalaz._
 
   def listSubdirectories(dir: Dir)
-  : Validation[BarnError, List[Dir]]
-  = validate(dir.listFiles.toList.filter(x => x.isDirectory) success,
+  : BarnError \/ List[Dir]
+  = validate(dir.listFiles.toList.filter(x => x.isDirectory) right,
     "Can't get list of local services directories on: " + dir)
 
   def sumFileSizes(files: List[File]) : Long = {
@@ -17,14 +17,14 @@ trait LocalFS {
   }
 
   def listSortedLocalFiles(dir : Dir, exclude: List[String] = List.empty)
-  : Validation[BarnError, List[File]] = validate ({
+  : BarnError \/ List[File] = validate ({
     dir.listFiles
        .toList
        .filterNot(_.isDirectory)
        .filterNot(x => exclude.foldLeft(false) {
           (res, pattern) => res || x.getName.matches(pattern) })
        .sorted
-       .success}
+       .right}
   , "Can't list local files on: " + dir)
 
 }
