@@ -1,5 +1,5 @@
 import AssemblyKeys._
-//import com.twitter.sbt._
+import com.twitter.sbt._
 
 name := "barn-hdfs"
 
@@ -25,12 +25,12 @@ libraryDependencies := Seq(
 , "org.apache.hadoop" % "hadoop-client" % "2.0.0-mr1-cdh4.3.0"
 , "commons-io"        %  "commons-io"   % "2.4"
 , "commons-lang"      %  "commons-lang" % "2.4"
-, "org.scalatest"     %% "scalatest"    % "2.1.0"  % "test,slow"
-, "org.scalacheck"    %% "scalacheck"   % "1.11.3" % "test,slow"
-, "org.scalaz"        %% "scalaz-core"  % "7.0.6"
+, "org.scalatest"     % "scalatest_2.10"    % "2.1.0"  % "test,slow"
+, "org.scalacheck"    % "scalacheck_2.10"   % "1.11.3" % "test,slow"
+, "org.scalaz"        % "scalaz-core_2.10"  % "7.0.6"
 , "com.yammer.metrics" % "metrics-ganglia"  % "3.0.0.sc-SNAPSHOT"
 , "com.yammer.metrics" % "metrics-scala_2.9.1"  % "3.0.0.sc-SNAPSHOT"
-, "com.github.scopt"  %% "scopt" % "2.1.0"
+, "com.github.scopt"  % "scopt_2.10" % "2.1.0"
 )
 
 
@@ -38,9 +38,9 @@ libraryDependencies := Seq(
 // settings
 //
 
-//PackageDist.newSettings
+PackageDist.newSettings
 
-//GitProject.gitSettings
+GitProject.gitSettings
 
 
 //
