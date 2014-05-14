@@ -8,7 +8,7 @@ DAHOOP_BASE := hadoop-0.20.2-cdh3u5
 DAHOOP_URL  := http://archive.cloudera.com/cdh/3/$(DAHOOP_BASE).tar.gz
 DAHOOP_DATA := hadoop-data
 
-SBT 		:= sbt/bin/sbt
+SBT 		:= ./sbt
 SBT_URL := http://scalasbt.artifactoryonline.com/scalasbt/sbt-native-packages/org/scala-sbt/sbt/0.12.1/sbt.tgz
 
 default : build
