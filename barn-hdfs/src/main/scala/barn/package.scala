@@ -60,13 +60,13 @@ package object barn {
                         month: Int,
                         day: Int)
 
-  type HdfsListCacheJ = ConcurrentHashMap[HdfsDir, \/[BarnError, \/[BarnError, List[PlacedFileInfo]]]]
+  type HdfsListCacheJ = ConcurrentHashMap[HdfsDir, \/[BarnError, BarnError \/ List[PlacedFileInfo]]]
   type HdfsListCache = concurrent.Map[HdfsDir, \/[BarnError, \/[BarnError, List[PlacedFileInfo]]]]
 
-  def validate[U](body: => \/[BarnError,U],
+  def validate[U](body: => BarnError \/ U,
                   detail: String = null,
                   carryException: Boolean = true)
-  : \/[BarnError, U]
+  : BarnError \/ U
   = allCatch either body fold ( exception => ThrownException(
     detail match {
       case null => getStackTrace(exception)
@@ -84,9 +84,9 @@ package object barn {
   implicit def errorConcat(a:String, b:String) = a + " and " + b
   implicit def errorConcat(a:BarnError, b:BarnError) = CombinedError(a,b)
 
-  def collapseValidate[A, B](v: List[\/[A,B]])
+  def collapseValidate[A, B](v: List[A \/ B])
                             (implicit op : (A,A) => A)
-  : \/[A, List[B]]= {
+  : A \/ List[B]= {
     val (errors, values) = v.foldLeft((List.empty[A], List.empty[B])) {
       case ((errors, vals), el) =>
         el.fold(x => ( errors :+ x , vals), x => (errors, vals :+ x) )

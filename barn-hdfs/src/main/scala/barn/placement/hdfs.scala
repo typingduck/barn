@@ -41,7 +41,7 @@ trait HdfsPlacementStrategy
                  , shipInterval: Int
                  , lookBackLowerBound: DateTime
                  , hdfsListCache: HdfsListCache)
-  : \/[BarnError, ShippingPlan] = {
+  : BarnError \/ ShippingPlan = {
 
     val hdfsTempDir = targetTempDir(baseHdfsDir)
     val hdfsDirStream = targetDirs(DateTime.now, baseHdfsDir, lookBackLowerBound)
@@ -81,8 +81,8 @@ trait HdfsPlacementStrategy
   }
 
   def logsForService(serviceInfo: LocalServiceInfo,
-                     hdfsFilesPlacedInfos: \/[BarnError, List[PlacedFileInfo]])
-  : \/[BarnError, List[PlacedFileInfo]] = for {
+                     hdfsFilesPlacedInfos: BarnError \/ List[PlacedFileInfo])
+  : BarnError \/ List[PlacedFileInfo] = for {
     hdfsFilesPlacedInfos_ <- hdfsFilesPlacedInfos
     hdfsFilesFiltered      = filter(hdfsFilesPlacedInfos_, serviceInfo)
   } yield hdfsFilesFiltered
@@ -91,7 +91,7 @@ trait HdfsPlacementStrategy
   : Option[String] = sorted(hdfsFiles, serviceInfo).lastOption.map(_.taistamp)
 
   def isShippingTime(lastShippedTimestamp: Option[DateTime], shippingInterval: Int, totalReadySize: Long, maxReadySize: Long)
-  : \/[BarnError, Unit]
+  : BarnError \/ Unit
   = lastShippedTimestamp match {
     case Some(lastTimestamp) =>
       (enoughTimePast(lastTimestamp, shippingInterval) ||
@@ -140,7 +140,7 @@ trait HdfsPlacementStrategy
     "([0-9]{4}),([0-9]{2}),([0-9]{2}),(.*),(.*),(.*).seq".r
 
   def getPlacedFileInfo(hdfsFile: HdfsFile)
-  : \/[BarnError, PlacedFileInfo]
+  : BarnError \/ PlacedFileInfo
   = validate(
     hdfsFile.getName match {
       case hdfsFileMatcher(year, month, day, service, host, taistamp) =>

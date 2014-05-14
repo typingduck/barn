@@ -15,7 +15,7 @@ trait LocalPlacementStrategy
   val delim = '@'
 
   def decodeServiceInfo(serviceDir: Dir)
-  : \/[BarnError, LocalServiceInfo]
+  : BarnError \/ LocalServiceInfo
   = serviceDir.getName.split(delim) match {
     case Array(service, category, host) =>
       LocalServiceInfo(service, host) right
@@ -26,7 +26,7 @@ trait LocalPlacementStrategy
                    cleanupLimit: DateTime,
                    minMB: Int,
                    exclude: List[String] = List empty)
-  : \/[BarnError, Unit]
+  : BarnError \/ Unit
   = for {
       localFiles <- listSortedLocalFiles(dir, exclude)
       deletion   <- validate({

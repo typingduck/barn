@@ -132,7 +132,7 @@ object BarnHdfsWriter
   }
 
   def earliestLookbackDate(localFiles: List[File], maxLookBackDays: Int)
-  : \/[BarnError, DateTime] = {
+  : BarnError \/ DateTime = {
     val maxLookBackTime = DateTime.now.minusDays(maxLookBackDays)
 
     localFiles.headOption match {
@@ -144,7 +144,7 @@ object BarnHdfsWriter
   }
 
   def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String], maxLookBackTime: Int)
-  : \/[BarnError, List[File]] = {
+  : BarnError \/ List[File] = {
     val maxLookBackTime = DateTime.now.minusDays(maxLookBackDays).minusDays(1).toDateMidnight
 
     lastTaistamp match {

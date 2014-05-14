@@ -25,27 +25,27 @@ trait Hadoop extends Logging {
   }
 
   def ensureHdfsDir(fs: HdfsFileSystem, hdfsDir: HdfsDir)
-  : \/[BarnError, HdfsDir] = validate(
+  : BarnError \/ HdfsDir = validate(
     tap(hdfsDir)(createPath(fs, _)).right
   , "Can't ensure/create dirs on hdfs:"  + hdfsDir)
 
   def pathExists(fs: HdfsFileSystem, hdfsDir: HdfsDir)
-  : \/[BarnError, Boolean] = validate(
+  : BarnError \/ Boolean = validate(
     fs.exists(hdfsDir).right
   , "Can't check existence of the path:" + hdfsDir)
 
   def createPath(fs: HdfsFileSystem, path: Path) : Boolean = fs.mkdirs(path)
 
   def createFileSystem(conf: Configuration)
-  : \/[BarnError, HdfsFileSystem]
+  : BarnError \/ HdfsFileSystem
   = HdfsFileSystem.get(conf).right
 
   def createLazyFileSystem(conf: Configuration)
-  : \/[BarnError, LazyHdfsFileSystem]
+  : BarnError \/ LazyHdfsFileSystem
   = new LazyWrapper(HdfsFileSystem.get(conf)).right
 
   def listHdfsFiles(fs: HdfsFileSystem, hdfsDir: HdfsDir)
-  : \/[BarnError, List[HdfsFile]]
+  : BarnError \/ List[HdfsFile]
   = validate(
       catching(classOf[FileNotFoundException])
       .either(fs.listStatus(hdfsDir)).fold(
@@ -63,7 +63,7 @@ trait Hadoop extends Logging {
                      , dest: HdfsDir
                      , hdfsName: String
                      , temp: HdfsDir)
-  : \/[BarnError, HdfsFile]
+  : BarnError \/ HdfsFile
   = for {
       hdfsTempFile <- shipToHdfs(fs, src, new HdfsDir(temp, randomName))
       renamedFile  <- atomicRenameOnHdfs(fs, hdfsTempFile, dest , hdfsName)
@@ -73,7 +73,7 @@ trait Hadoop extends Logging {
                        , src: HdfsFile
                        , dest: HdfsDir
                        , newName: String)
-  : \/[BarnError, HdfsFile]
+  : BarnError \/ HdfsFile
   = validate({
     val targetHdfsFile = new HdfsFile(dest, newName)
     info("Moving " + src + " to " + targetHdfsFile + " @ "  + fs.getUri)
@@ -84,7 +84,7 @@ trait Hadoop extends Logging {
     }}, "Rename failed due to IO error")
 
   def shipToHdfs(fs: HdfsFileSystem, localFile: File, targetFile: HdfsFile)
-  : \/[BarnError, HdfsFile] = validate ({
+  : BarnError \/ HdfsFile = validate ({
     info("Shipping " + localFile + " to " + targetFile + " @ " + fs.getUri)
     fs.copyFromLocalFile(true, true, new HdfsFile(localFile.getPath), targetFile)
     targetFile.right

@@ -8,7 +8,7 @@ trait LocalFS {
   import Scalaz._
 
   def listSubdirectories(dir: Dir)
-  : \/[BarnError, List[Dir]]
+  : BarnError \/ List[Dir]
   = validate(dir.listFiles.toList.filter(x => x.isDirectory) right,
     "Can't get list of local services directories on: " + dir)
 
@@ -17,7 +17,7 @@ trait LocalFS {
   }
 
   def listSortedLocalFiles(dir : Dir, exclude: List[String] = List.empty)
-  : \/[BarnError, List[File]] = validate ({
+  : BarnError \/ List[File] = validate ({
     dir.listFiles
        .toList
        .filterNot(_.isDirectory)

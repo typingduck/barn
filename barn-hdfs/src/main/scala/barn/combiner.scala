@@ -77,7 +77,7 @@ trait FileCombiner extends Logging {
   }
 
   def concatCandidates(candidates: List[File], targetDir: Dir)
-  : \/[BarnError, File] = validate ({
+  : BarnError \/ File = validate ({
     val combinedName = RandomStringUtils.randomAlphanumeric(20)
     val combinedLocalFile = new File(targetDir, combinedName)
     info("Combining " + candidates.size + " ("+ candidates.head + " and ... )" +
