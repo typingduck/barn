@@ -77,7 +77,7 @@ object BarnHdfsWriter
       serviceInfo <- decodeServiceInfo(serviceDir)
       fs          <- createLazyFileSystem(barnConf.hdfsEndpoint)
       localFiles  <- listSortedLocalFiles(serviceDir, excludeList)
-      totalReadySize <- sumFileSizes(localFiles).success
+      totalReadySize <- sumFileSizes(localFiles).right
       lookBack    <- earliestLookbackDate(localFiles, maxLookBackDays)
       plan        <- planNextShip(fs
                                 , serviceInfo
@@ -132,19 +132,19 @@ object BarnHdfsWriter
   }
 
   def earliestLookbackDate(localFiles: List[File], maxLookBackDays: Int)
-  : Validation[BarnError, DateTime] = {
+  : \/[BarnError, DateTime] = {
     val maxLookBackTime = DateTime.now.minusDays(maxLookBackDays)
 
     localFiles.headOption match {
       case Some(f) =>
         svlogdFileTimestamp(f).map(ts =>
           if(ts.isBefore(maxLookBackTime)) maxLookBackTime else ts)
-      case None => maxLookBackTime.success
+      case None => maxLookBackTime.right
     }
   }
 
   def outstandingFiles(localFiles: List[File], lastTaistamp: Option[String], maxLookBackTime: Int)
-  : Validation[BarnError, List[File]] = {
+  : \/[BarnError, List[File]] = {
     val maxLookBackTime = DateTime.now.minusDays(maxLookBackDays).minusDays(1).toDateMidnight
 
     lastTaistamp match {
@@ -157,16 +157,16 @@ object BarnHdfsWriter
               Tai64.convertTai64ToTime(fileTaistring).isBefore(maxLookBackTime)
 
           }) match {
-            case Nil => NothingToSync("No local files left to sync.") fail
-            case x => x success
+            case Nil => NothingToSync("No local files left to sync.") left
+            case x => x right
           }
       case None =>
         localFiles.dropWhile(f =>    //TODO Deduplicate me with the case above
           Tai64.convertTai64ToTime(
             svlogdFileNameToTaiString(f getName))
               .isBefore(maxLookBackTime)) match {
-                case Nil => NothingToSync("No local files left to sync.") fail
-                case x => x success
+                case Nil => NothingToSync("No local files left to sync.") left
+                case x => x right
                }
     }
   }

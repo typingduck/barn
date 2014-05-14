@@ -21,7 +21,7 @@ trait HdfsPlacementStrategy
   def cachingLs(fs: LazyHdfsFileSystem
               , path: HdfsDir
               , hdfsListCache: HdfsListCache)
-  : Validation[barn.BarnError, Validation[BarnError, List[PlacedFileInfo]]] = {
+  : \/[barn.BarnError, \/[BarnError, List[PlacedFileInfo]]] = {
     hdfsListCache.get(path) match {
       case Some(x) => x
       case None => {
@@ -41,7 +41,7 @@ trait HdfsPlacementStrategy
                  , shipInterval: Int
                  , lookBackLowerBound: DateTime
                  , hdfsListCache: HdfsListCache)
-  : Validation[BarnError, ShippingPlan] = {
+  : \/[BarnError, ShippingPlan] = {
 
     val hdfsTempDir = targetTempDir(baseHdfsDir)
     val hdfsDirStream = targetDirs(DateTime.now, baseHdfsDir, lookBackLowerBound)
@@ -51,13 +51,13 @@ trait HdfsPlacementStrategy
     val dirsWithRelevantHdfsFilesStream = for {
         each           <- hdfsDirStream
         relevantFiles  <- cachingLs(fs, each , hdfsListCache) match {
-			      case Failure(FileNotFound(_)) => None
-			      case Failure(a) => Failure(a) some
-            case Success(Failure(a)) => Failure(a) some
-			      case Success(Success(Nil)) => None
-			      case Success(a) =>
+			      case -\/(FileNotFound(_)) => None
+			      case -\/(a) => -\/(a) some
+            case \/-(-\/(a)) => -\/(a) some
+			      case \/-(\/-(Nil)) => None
+			      case \/-(a) =>
 				logsForService(serviceInfo, a) match {
-				  case Success(Nil) => None
+				  case \/-(Nil) => None
 				  case otherwise => otherwise some
 				}
 			  }
@@ -66,7 +66,7 @@ trait HdfsPlacementStrategy
     for {
        hdfsFilesFileInfo    <- dirsWithRelevantHdfsFilesStream
                                 .headOption
-                                .getOrElse(List.empty[PlacedFileInfo].success)
+                                .getOrElse(List.empty[PlacedFileInfo].right)
 
        lastShippedTaistamp   = getLastShippedTaistamp(hdfsFilesFileInfo, serviceInfo)
        lastShippedTimestamp  = lastShippedTaistamp.map(Tai64.convertTai64ToTime(_))
@@ -81,8 +81,8 @@ trait HdfsPlacementStrategy
   }
 
   def logsForService(serviceInfo: LocalServiceInfo,
-                     hdfsFilesPlacedInfos: Validation[BarnError, List[PlacedFileInfo]])
-  : Validation[BarnError, List[PlacedFileInfo]] = for {
+                     hdfsFilesPlacedInfos: \/[BarnError, List[PlacedFileInfo]])
+  : \/[BarnError, List[PlacedFileInfo]] = for {
     hdfsFilesPlacedInfos_ <- hdfsFilesPlacedInfos
     hdfsFilesFiltered      = filter(hdfsFilesPlacedInfos_, serviceInfo)
   } yield hdfsFilesFiltered
@@ -91,15 +91,15 @@ trait HdfsPlacementStrategy
   : Option[String] = sorted(hdfsFiles, serviceInfo).lastOption.map(_.taistamp)
 
   def isShippingTime(lastShippedTimestamp: Option[DateTime], shippingInterval: Int, totalReadySize: Long, maxReadySize: Long)
-  : Validation[BarnError, Unit]
+  : \/[BarnError, Unit]
   = lastShippedTimestamp match {
     case Some(lastTimestamp) =>
       (enoughTimePast(lastTimestamp, shippingInterval) ||
        totalReadySize > maxReadySize) match {
-        case true => () success
-        case false => SyncThrottled("I synced not long ago.") fail
+        case true => () right
+        case false => SyncThrottled("I synced not long ago.") left
       }
-    case None => ().success
+    case None => ().right
   }
 
   def targetName(taistamp : String, serviceInfo: LocalServiceInfo) :String = {
@@ -140,13 +140,13 @@ trait HdfsPlacementStrategy
     "([0-9]{4}),([0-9]{2}),([0-9]{2}),(.*),(.*),(.*).seq".r
 
   def getPlacedFileInfo(hdfsFile: HdfsFile)
-  : Validation[BarnError, PlacedFileInfo]
+  : \/[BarnError, PlacedFileInfo]
   = validate(
     hdfsFile.getName match {
       case hdfsFileMatcher(year, month, day, service, host, taistamp) =>
         PlacedFileInfo(DateBucket(year.toInt, month.toInt, day.toInt)
-                                , host, service, taistamp) success
-      case _ => InvalidNameFormat("Invalid HdfsFile name format " + hdfsFile) fail
+                                , host, service, taistamp) right
+      case _ => InvalidNameFormat("Invalid HdfsFile name format " + hdfsFile) left
     }, "Invalid HdfsFile name format " + hdfsFile)
 
   def targetDirs(base: DateTime, baseHdfsDir: HdfsDir, lowerBound: DateTime)

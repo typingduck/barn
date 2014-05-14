@@ -77,13 +77,13 @@ trait FileCombiner extends Logging {
   }
 
   def concatCandidates(candidates: List[File], targetDir: Dir)
-  : Validation[BarnError, File] = validate ({
+  : \/[BarnError, File] = validate ({
     val combinedName = RandomStringUtils.randomAlphanumeric(20)
     val combinedLocalFile = new File(targetDir, combinedName)
     info("Combining " + candidates.size + " ("+ candidates.head + " and ... )" +
       " into " + combinedLocalFile)
     combineIntoSeqFile(candidates, combinedLocalFile)
-    combinedLocalFile success
+    combinedLocalFile right
   } , "Can't combine files into a sequence file." +
       " Candidates to combine: " + candidates)
 

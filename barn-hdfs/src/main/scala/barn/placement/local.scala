@@ -15,18 +15,18 @@ trait LocalPlacementStrategy
   val delim = '@'
 
   def decodeServiceInfo(serviceDir: Dir)
-  : Validation[BarnError, LocalServiceInfo]
+  : \/[BarnError, LocalServiceInfo]
   = serviceDir.getName.split(delim) match {
     case Array(service, category, host) =>
-      LocalServiceInfo(service, host) success
-    case _ => InvalidNameFormat("Failed to extract service info for " + serviceDir) fail
+      LocalServiceInfo(service, host) right
+    case _ => InvalidNameFormat("Failed to extract service info for " + serviceDir) left
   }
 
   def cleanupLocal(dir: Dir,
                    cleanupLimit: DateTime,
                    minMB: Int,
                    exclude: List[String] = List empty)
-  : Validation[BarnError, Unit]
+  : \/[BarnError, Unit]
   = for {
       localFiles <- listSortedLocalFiles(dir, exclude)
       deletion   <- validate({
@@ -47,7 +47,7 @@ trait LocalPlacementStrategy
               case false => deletedSoFar -> curSize
             }
         }
-      }.success, "Deletion of retained files failed.")
+      }.right, "Deletion of retained files failed.")
     } yield tap(deletion) (x => info (x._1 + " retained files deleted and " +
                                         x._2 / (1024) + "KB remained" +
                                         " on " + dir ))
