@@ -44,9 +44,9 @@ stop-hadoop : $(DAHOOP_BASE)
 
 $(PACKAGE_ZIP) : $(SRC)
 	@echo "Building barn-hdfs.zip..."
-	$(MAKE) start-hadoop
-	$(SBT) clean slow:test package-dist
-	$(MAKE) stop-hadoop
+	# $(MAKE) start-hadoop
+	$(SBT) clean test package-dist
+	# $(MAKE) stop-hadoop
 
 $(DAHOOP_BASE) :
 	$(MAKE) $(DAHOOP_BASE).tar.gz
