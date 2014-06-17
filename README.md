@@ -137,7 +137,7 @@ wouldn't satisfy all of our requirements. YMMV, as usual.
 
 Make sure you have the following installed on the build system:
 
-* a recent gcc
+* a recent gcc (version >= 4.7 for C++11)
 * a recent JDK
 * a working `make`
 * [SCons](http://www.scons.org/)

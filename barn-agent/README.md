@@ -8,7 +8,7 @@ Barn Agent is written in C++ and requires the following dependencies:
 * Compile-time:
   - Boost Libraries (tested against 1.49.0) and needs to link against (boost::system, boost::filesystem)
   - Boost.Process (which is not a part of official boost libraries, but included in the source three.)
-  - A C++0x compliant to compile C++0x features. Tested with GCC 4.7.2.
+  - A C++11 compliant to compile C++11 features. Tested with GCC 4.7.2.
 * Run-time:
   - Rsync (tested on 3.0.7 but should work with 3.0.x)
   - inotifywait (which I'll remove the dependency in the future by replacing with system calls)
