@@ -1,6 +1,6 @@
 .PHONY: build clean dist
 
-COMPONENTS := barn-hdfs barn-master barn-agent
+COMPONENTS := rtail
 
 default : build
 
