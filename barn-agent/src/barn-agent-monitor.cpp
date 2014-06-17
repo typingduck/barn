@@ -1,11 +1,10 @@
-
 #include <thread>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include "monitor_main.h"
+#include "barn-agent-monitor.h"
 #include "ganglia.h"
 #include "localreport.h"
 

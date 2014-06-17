@@ -18,7 +18,7 @@ const BarnConf parse_command_line(int argc, char* argv[]) {
           "produce help message")
         ("master,m", po::value<string>(&conf.barn_rsync_addr),
           "barn-master's host:port address")
-        ("source,s", po::value<string>(&conf.rsync_source),
+        ("source,s", po::value<string>(&conf.source_dir),
           "source log directory")
         ("service-name,n", po::value<string>(&conf.service_name),
           "name of the service who owns the log directory")

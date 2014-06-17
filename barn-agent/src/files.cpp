@@ -9,7 +9,7 @@
 using namespace std;
 namespace fs = boost::filesystem;
 
-vector<string> list_files(string path_) {
+vector<string> list_file_paths(string path_) {
   const fs::path path(path_);
   const fs::directory_iterator end;
   vector<string> file_names;
