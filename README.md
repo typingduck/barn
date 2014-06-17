@@ -169,6 +169,7 @@ Make sure you have the following installed on the build system:
 * a recent JDK
 * a recent Haskell Platform
 * a working `make`
+* [SCons](http://www.scons.org/)
 
 Then, in the top level of the repository, simply type:
 
