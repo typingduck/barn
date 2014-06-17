@@ -31,7 +31,7 @@ Optionally you can set BOOST_INCLUDE_PATH and BOOST_LIB_PATH if your boost is in
      - libboost-system-dev 
      - libboost-filesystem-dev 
      - libboost-timer-dev 
-     - libboost-program-options      
+     - libboost-program-options-dev      
       
 * You can also make a debian package out of the binary, via ```make dist```.
 
