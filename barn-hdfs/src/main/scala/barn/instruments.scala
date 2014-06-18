@@ -18,7 +18,7 @@ trait Instruments extends InstrumentedBuilder {
 
   private val currentlyShipping = metrics.counter("currentlyShipping")
 
-  private val fatalError = metrics.meter("barn", "fatalError")
+  private val fatalError = metrics.meter("fatalError")
 
   private val combineTime = metrics.timer("combineTime")
   private val shipTime = metrics.timer("shipTime")
