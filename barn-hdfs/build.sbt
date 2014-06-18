@@ -13,11 +13,6 @@ scalaVersion := "2.10.4"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimize")
 
-resolvers := Seq(
-  "SC Hosted" at "http://maven.int.s-cloud.net/content/groups/hosted"
-, "SC Proxy"  at "http://maven.int.s-cloud.net/content/groups/proxy"
-)
-
 libraryDependencies := Seq(
   "joda-time"         %  "joda-time"    % "2.0"
 , "org.joda"          %  "joda-convert" % "1.1"
@@ -28,8 +23,9 @@ libraryDependencies := Seq(
 , "org.scalatest"     % "scalatest_2.10"    % "2.1.0"  % "test,slow"
 , "org.scalacheck"    % "scalacheck_2.10"   % "1.11.3" % "test,slow"
 , "org.scalaz"        % "scalaz-core_2.10"  % "7.0.6"
-, "com.yammer.metrics" % "metrics-ganglia"  % "3.0.0.sc-SNAPSHOT"
-, "com.yammer.metrics" % "metrics-scala_2.9.1"  % "3.0.0.sc-SNAPSHOT"
+, "com.codahale.metrics" % "metrics-ganglia"  % "3.0.2"
+, "com.codahale.metrics" % "metrics-servlet"  % "3.0.2"
+, "nl.grons"          % "metrics-scala_2.10"  % "3.0.2"
 , "com.github.scopt"  % "scopt_2.10" % "2.1.0"
 )
 

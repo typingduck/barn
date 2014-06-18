@@ -31,6 +31,8 @@ object BarnHdfsWriter
                , GangliaOpts(barnConf.gangliaHost
                            , barnConf.gangliaPort))
 
+    enableJMX();
+
     continually(() => listSubdirectories(barnConf.localLogDir)).iterator
       .foreach { listDirs => {
 
