@@ -44,14 +44,17 @@ trait Instruments extends InstrumentedBuilder {
     )
 
   def enableJMX() : Unit = {
-    val reporter = JmxReporter.forRegistry(metricRegistry).build();
+    val reporter = JmxReporter.forRegistry(metricRegistry)
+                              .convertRatesTo(TimeUnit.MINUTES)
+                              .convertDurationsTo(TimeUnit.MILLISECONDS)
+                              .build();
     reporter.start();
   }
 
   def enableGanglia(app: String, opts: GangliaOpts): Unit = {
     val ganglia = new GMetric(opts.host, opts.port, GMetric.UDPAddressingMode.MULTICAST, 1);
     val reporter = GangliaReporter.forRegistry(metricRegistry)
-                                  .convertRatesTo(TimeUnit.SECONDS)
+                                  .convertRatesTo(TimeUnit.MINUTES)
                                   .convertDurationsTo(TimeUnit.MILLISECONDS)
                                   .build(ganglia);
      reporter.start(opts.interval, TimeUnit.MINUTES);
