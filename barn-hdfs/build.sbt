@@ -13,6 +13,10 @@ scalaVersion := "2.10.4"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimize")
 
+resolvers := Seq(
+   "Cloudera Repo" at "https://repository.cloudera.com/artifactory/cloudera-repos/"
+ )
+
 libraryDependencies := Seq(
   "joda-time"         %  "joda-time"    % "2.0"
 , "org.joda"          %  "joda-convert" % "1.1"
