@@ -1,13 +1,14 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+
 #include "barn-agent.h"
-#include "process.h"
-#include "rsync.h"
+#include "channel_selector.h"
 #include "files.h"
 #include "helpers.h"
-#include "process.h"
 #include "localreport.h"
+#include "process.h"
+#include "rsync.h"
 
 using namespace std;
 using namespace boost::assign;
@@ -16,10 +17,9 @@ using namespace boost;
 static Validation<ShipStatistics>
 ship_candidates(const AgentChannel& channel, vector<string> candidates);
 static Validation<FileNameList> query_candidates(const AgentChannel& channel);
-void wait_for_directory_change(const string& source_dir);
-void sleep_it();
-
-
+static void wait_for_directory_change(const string& source_dir);
+static void sleep_it();
+static ChannelSelector<AgentChannel> create_channel_selector(const BarnConf& barn_conf);
 
 /*
  * Main Barn Agent's loop.
@@ -33,18 +33,16 @@ void barn_agent_main(const BarnConf& barn_conf) {
   Metrics metrics = Metrics(barn_conf.monitor_port,
     barn_conf.service_name, barn_conf.category);
 
-  AgentChannel channel;
-  channel.rsync_target = get_rsync_target(barn_conf, REMOTE_RSYNC_NAMESPACE);
-  channel.source_dir = barn_conf.source_dir;
+  auto channel_selector = create_channel_selector(barn_conf);
 
   auto sync_failure = [&](BarnError error) {
-    cout << "Syncing Error to " << channel.rsync_target << ":" << error << endl;
+    cout << "Syncing Error to " << channel_selector.current().rsync_target << ":" << error << endl;
     metrics.send_metric(FailedToGetSyncList, 1);
     sleep_it();
   };
 
   auto ship_failure = [&](BarnError error) {
-    cout << "Shippment Error to " << channel.rsync_target << ":" << error << endl;
+    cout << "Shipment Error to " << channel_selector.current().rsync_target << ":" << error << endl;
     // On error, sleep to prevent error-spins
     sleep_it();
   };
@@ -52,6 +50,7 @@ void barn_agent_main(const BarnConf& barn_conf) {
   auto after_successful_ship = [&](ShipStatistics ship_statistics) {
     metrics.send_metric(LostDuringShip, ship_statistics.num_lost_during_ship);
     metrics.send_metric(RotatedDuringShip, ship_statistics.num_rotated_during_ship);
+    channel_selector.heartbeat();
 
     // If no file is shipped, wait for a change on directory.
     // If any file is shipped, sleep, then check again for change to
@@ -61,16 +60,17 @@ void barn_agent_main(const BarnConf& barn_conf) {
     if (ship_statistics.num_shipped)
       sleep_it();
     else
-      wait_for_directory_change(channel.source_dir);
+      wait_for_directory_change(channel_selector.current().source_dir);
   };
 
   while(true) {
+    channel_selector.pick_channel();
     fold(
-      query_candidates(channel),
+      query_candidates(channel_selector.current()),
       [&](FileNameList file_name_list) {
         metrics.send_metric(FilesToShip, file_name_list.size());
         fold(
-          ship_candidates(channel, file_name_list),
+          ship_candidates(channel_selector.current(), file_name_list),
           after_successful_ship,
           ship_failure);
       },
@@ -215,4 +215,17 @@ void wait_for_directory_change(const string& source_dir)  {
          << ex.what() << endl;
     sleep_it();
   }
+}
+
+ChannelSelector<AgentChannel> create_channel_selector(const BarnConf& barn_conf) {
+  AgentChannel primary;
+  primary.rsync_target = get_rsync_target(barn_conf, REMOTE_RSYNC_NAMESPACE);
+  primary.source_dir = barn_conf.source_dir;
+
+  AgentChannel backup;
+  backup.rsync_target = get_rsync_target(barn_conf, REMOTE_RSYNC_NAMESPACE_BACKUP);
+  backup.source_dir = barn_conf.source_dir;
+
+  // TODO: make failover time configurable.
+  return ChannelSelector<AgentChannel>(primary, backup, 10*60);
 }

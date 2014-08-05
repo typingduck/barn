@@ -24,7 +24,7 @@ const std::string get_rsync_target(const BarnConf& barn_conf, string remote_rsyn
   static const auto host_name = get_host_name(); //TODO: make me better
   static const auto TOKEN_SEPARATOR = "@";
 
-  return rsync_protocol + barn_conf.barn_rsync_addr
+  return rsync_protocol + barn_conf.barn_rsync_addr // TODO: allow backup channel here too.
        + RSYNC_PATH_SEPARATOR + remote_rsync_namespace
        + RSYNC_PATH_SEPARATOR + barn_conf.service_name
        + TOKEN_SEPARATOR + barn_conf.category

@@ -13,6 +13,7 @@
 // This value shows up on rsync daemon conf.
 // TODO configure this together with barn-master package.
 const auto REMOTE_RSYNC_NAMESPACE        = "barn_logs";
+const auto REMOTE_RSYNC_NAMESPACE_BACKUP = "barn_logs_backup";
 
 typedef std::string FileName;
 typedef std::vector<FileName> FileNameList;
