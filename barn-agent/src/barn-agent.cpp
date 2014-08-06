@@ -17,7 +17,7 @@ using namespace boost;
 static Validation<ShipStatistics>
 ship_candidates(const AgentChannel& channel, vector<string> candidates);
 static Validation<FileNameList> query_candidates(const AgentChannel& channel);
-static void wait_for_directory_change(const string& source_dir);
+static void wait_for_directory_change(ChannelSelector<AgentChannel>*);
 static void sleep_it();
 static ChannelSelector<AgentChannel> create_channel_selector(const BarnConf& barn_conf);
 
@@ -50,6 +50,7 @@ void barn_agent_main(const BarnConf& barn_conf) {
   auto after_successful_ship = [&](ShipStatistics ship_statistics) {
     metrics.send_metric(LostDuringShip, ship_statistics.num_lost_during_ship);
     metrics.send_metric(RotatedDuringShip, ship_statistics.num_rotated_during_ship);
+    cout << "successfully shipped " << ship_statistics.num_shipped << " files" << endl;
     channel_selector.heartbeat();
 
     // If no file is shipped, wait for a change on directory.
@@ -60,7 +61,7 @@ void barn_agent_main(const BarnConf& barn_conf) {
     if (ship_statistics.num_shipped)
       sleep_it();
     else
-      wait_for_directory_change(channel_selector.current().source_dir);
+      wait_for_directory_change(&channel_selector);
   };
 
   while(true) {
@@ -191,7 +192,7 @@ void sleep_it()  {
   sleep(5);
 }
 
-void wait_for_directory_change(const string& source_dir)  {
+void wait_for_directory_change(ChannelSelector<AgentChannel>* cs)  {
   cout << "Waiting for directory change..." << endl;
 
   try {
@@ -208,7 +209,8 @@ void wait_for_directory_change(const string& source_dir)  {
                              ("-q")
                              ("-e")
                              ("moved_to")
-                             (source_dir + "/")).first;
+                             (cs->current().source_dir + "/")).first;
+    cs->heartbeat();  // Could be asleep for 1 hour, don't failover if that's the case
 
   } catch (const fs_error& ex) {
     cout << "You appear not having inotifywait, sleeping instead."
@@ -219,11 +221,19 @@ void wait_for_directory_change(const string& source_dir)  {
 
 ChannelSelector<AgentChannel> create_channel_selector(const BarnConf& barn_conf) {
   AgentChannel primary;
-  primary.rsync_target = get_rsync_target(barn_conf, REMOTE_RSYNC_NAMESPACE);
+  primary.rsync_target = get_rsync_target(
+        barn_conf.primary_rsync_addr,
+        REMOTE_RSYNC_NAMESPACE,
+        barn_conf.service_name,
+        barn_conf.category);
   primary.source_dir = barn_conf.source_dir;
 
   AgentChannel backup;
-  backup.rsync_target = get_rsync_target(barn_conf, REMOTE_RSYNC_NAMESPACE_BACKUP);
+  backup.rsync_target = get_rsync_target(
+        barn_conf.secondary_rsync_addr,
+        REMOTE_RSYNC_NAMESPACE_BACKUP,
+        barn_conf.service_name,
+        barn_conf.category);
   backup.source_dir = barn_conf.source_dir;
 
   // TODO: make failover time configurable.

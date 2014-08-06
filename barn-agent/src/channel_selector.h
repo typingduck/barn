@@ -68,7 +68,11 @@ public:
 protected:
   // protected for testing.
   virtual time_t now_in_seconds() const {
-    return time(0);
+    time_t t = time(0);
+    if (t < 0) {
+        throw "Failed to get time from system";
+    }
+    return t;
   }
 
   // On primary channel: time since last heartbeat() function call
